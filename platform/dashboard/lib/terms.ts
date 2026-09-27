@@ -18,8 +18,8 @@ export type TermsStatus = {
 };
 
 export async function getTermsStatus(client: SupabaseClient): Promise<TermsStatus> {
-  const { data: sessionData } = await client.auth.getSession();
-  const userId = sessionData.session?.user.id;
+  const { data: sessionData } = await client.auth.getUser();
+  const userId = sessionData.user?.id;
   if (!userId) {
     return { accepted: false, acceptedAt: null, version: TERMS_VERSION };
   }
@@ -45,8 +45,8 @@ export async function getTermsStatus(client: SupabaseClient): Promise<TermsStatu
 }
 
 export async function acceptTerms(client: SupabaseClient): Promise<void> {
-  const { data: sessionData } = await client.auth.getSession();
-  const userId = sessionData.session?.user.id;
+  const { data: sessionData } = await client.auth.getUser();
+  const userId = sessionData.user?.id;
   if (!userId) {
     throw new Error(НЕ_ВОШЁЛ);
   }

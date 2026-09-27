@@ -48,7 +48,8 @@ export async function addWeighingAction(
     });
 
     if (error) {
-      return { status: "error", message: `Не удалось сохранить: ${error.message}` };
+      console.error("[weights] insert", error);
+      return { status: "error", message: "Не удалось сохранить вес" };
     }
 
     // Пересчитываем сразу. Ошибку молча глушим: вес уже записан, и это

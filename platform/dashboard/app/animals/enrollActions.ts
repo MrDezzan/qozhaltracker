@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerSupabase } from "../../lib/supabaseServer";
+import { этоUuid } from "../../lib/validate";
 import { requireFarmId } from "../../lib/auth";
 import { describeError } from "../../lib/retry";
 import { RecordingSession } from "../../lib/enrollment";
@@ -54,7 +55,10 @@ export async function startRecordingAction(
       existing_animal_id: animalId || null,
     });
 
-    if (error) return { status: "error", message: error.message };
+    if (error) {
+      console.error("[enroll] start_recording", error);
+      return { status: "error", message: "Не удалось начать запись" };
+    }
 
     refresh();
     return { status: "ok", message: "Запись началась" };
@@ -64,10 +68,23 @@ export async function startRecordingAction(
 }
 
 /** Остановить запись. Пустую запись база превращает в отмену. */
+/*
+  Проверка входа стоит в каждом действии записи отдельно.
+
+  Раньше эти четыре опирались только на политики в базе: RPC вызываются
+  от имени пользователя, и чужую запись Postgres не отдаст. Защита
+  рабочая, но единственная, а результат RPC даже не читался, поэтому
+  отказ выглядел как успех. Проверка в коде ставит барьер раньше и
+  делает отказ видимым.
+*/
 export async function finishRecordingAction(formData: FormData): Promise<void> {
   const sessionId = String(formData.get("sessionId") ?? "");
+  if (!этоUuid(sessionId)) return;
+
   const supabase = await getServerSupabase();
-  await supabase.rpc("finish_recording", { session_id: sessionId });
+  await requireFarmId(supabase);
+  const { error } = await supabase.rpc("finish_recording", { session_id: sessionId });
+  if (error) console.error("[enroll] finish_recording", error);
   refresh();
 }
 
@@ -80,8 +97,12 @@ export async function finishRecordingAction(formData: FormData): Promise<void> {
  */
 export async function cancelRecordingAction(formData: FormData): Promise<void> {
   const sessionId = String(formData.get("sessionId") ?? "");
+  if (!этоUuid(sessionId)) return;
+
   const supabase = await getServerSupabase();
-  await supabase.rpc("cancel_recording", { session_id: sessionId });
+  await requireFarmId(supabase);
+  const { error } = await supabase.rpc("cancel_recording", { session_id: sessionId });
+  if (error) console.error("[enroll] cancel_recording", error);
   refresh();
 }
 
@@ -93,8 +114,12 @@ export async function cancelRecordingAction(formData: FormData): Promise<void> {
  */
 export async function skipRecordingViewAction(formData: FormData): Promise<void> {
   const sessionId = String(formData.get("sessionId") ?? "");
+  if (!этоUuid(sessionId)) return;
+
   const supabase = await getServerSupabase();
-  await supabase.rpc("skip_recording_view", { session_id: sessionId });
+  await requireFarmId(supabase);
+  const { error } = await supabase.rpc("skip_recording_view", { session_id: sessionId });
+  if (error) console.error("[enroll] skip_recording_view", error);
   refresh();
 }
 
@@ -120,13 +145,17 @@ export async function pollRecordingAction(): Promise<RecordingSession | null> {
 export async function renameAnimalAction(formData: FormData): Promise<void> {
   const animalId = String(formData.get("animalId") ?? "");
   const label = String(formData.get("label") ?? "").trim();
-  if (!animalId || !label) return;
+  // Предел длины: кличка уезжает в заголовки таблиц и в текст тревог,
+  // а строка на тысячу знаков ломает и то, и другое
+  if (!этоUuid(animalId) || !label || label.length > 80) return;
 
   const supabase = await getServerSupabase();
-  await supabase.rpc("rename_animal", {
+  await requireFarmId(supabase);
+  const { error } = await supabase.rpc("rename_animal", {
     target_animal_id: animalId,
     new_label: label,
   });
+  if (error) console.error("[enroll] rename_animal", error);
   refresh();
 }
 
@@ -138,7 +167,7 @@ export async function renameAnimalAction(formData: FormData): Promise<void> {
  */
 export async function deleteAnimalAction(formData: FormData): Promise<void> {
   const animalId = String(formData.get("animalId") ?? "");
-  if (!animalId) return;
+  if (!этоUuid(animalId)) return;
 
   const supabase = await getServerSupabase();
   const farmId = await requireFarmId(supabase);

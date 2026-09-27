@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 async function navState(): Promise<{ alertCount: number; isAdmin: boolean }> {
   try {
     const supabase = await getServerSupabase();
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return { alertCount: 0, isAdmin: false };
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return { alertCount: 0, isAdmin: false };
 
     const [alerts, profile] = await Promise.all([
       supabase
@@ -34,7 +34,7 @@ async function navState(): Promise<{ alertCount: number; isAdmin: boolean }> {
       supabase
         .from("profiles")
         .select("role")
-        .eq("id", data.session.user.id)
+        .eq("id", data.user.id)
         .maybeSingle(),
     ]);
 

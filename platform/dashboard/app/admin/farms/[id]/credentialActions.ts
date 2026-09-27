@@ -6,6 +6,7 @@ import { requireAdmin } from "../../../../lib/adminGuard";
 import { getFarmAccounts, resetPassword, ResetTarget } from "../../../../lib/credentialReset";
 import { formatHandoffMessage, fromAuthEmail } from "../../../../lib/credentials";
 import { describeError } from "../../../../lib/retry";
+import { этоUuid, изСписка, строка } from "../../../../lib/validate";
 
 export type CredentialsState =
   | { status: "idle" }
@@ -17,8 +18,23 @@ export async function resetFarmCredentialsAction(
   formData: FormData
 ): Promise<CredentialsState> {
   const farmId = String(formData.get("farmId") ?? "");
-  const farmName = String(formData.get("farmName") ?? "");
-  const target = String(formData.get("target") ?? "owner") as ResetTarget;
+  const farmName = строка(formData.get("farmName"), { максимум: 200, обязательна: false }) ?? "";
+
+  /*
+    `as ResetTarget` не проверяет ничего.
+
+    Приведение типа существует только во время сборки: в готовом коде
+    его нет, и в переменную попадёт любая строка из формы. Дальше она
+    идёт в ветвления и в сообщение владельцу. Список известных значений
+    здесь короткий, проверка дешёвая.
+  */
+  const target = изСписка<ResetTarget>(formData.get("target") ?? "owner", ["owner", "device"]);
+  if (!target) {
+    return { status: "error", message: "Неизвестный тип учётной записи" };
+  }
+  if (!этоUuid(farmId)) {
+    return { status: "error", message: "Ферма указана неверно" };
+  }
 
   try {
     // Права проверяем клиентом пользователя: admin-клиент обходит RLS

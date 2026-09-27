@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
 import "server-only";
 import { getAdminSupabase } from "../../../lib/supabaseAdmin";
 import { pathFromRelayRequest } from "../../../lib/remoteStream";
+import { проверитьЧастоту, слишкомЧасто } from "../../../lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,7 +28,20 @@ export async function POST(request: NextRequest) {
     console.error("RELAY_AUTH_SECRET не задан: проверка доступа отключена бы");
     return new Response("Не настроено", { status: 500 });
   }
-  if (request.headers.get("x-relay-secret") !== expected) {
+  /*
+    Сравнение постоянного времени.
+
+    Обычное !== выходит на первом несовпавшем байте, и по времени ответа
+    секрет подбирается побайтово. Сравниваем хеши: они всегда одной
+    длины, поэтому timingSafeEqual не бросит исключение на строках
+    разного размера — а сама разница длин тоже не утечёт.
+  */
+  const присланный = request.headers.get("x-relay-secret") ?? "";
+  const сверка = timingSafeEqual(
+    createHash("sha256").update(присланный).digest(),
+    createHash("sha256").update(expected).digest()
+  );
+  if (!сверка) {
     return new Response("Нельзя", { status: 401 });
   }
 
@@ -45,6 +60,11 @@ export async function POST(request: NextRequest) {
   // Сервисным ключом: у сервера ретрансляции нет и не может быть
   // пользовательской сессии. Знание случайного пути и есть пропуск,
   // а живёт он минуты.
+  // Секрет сервера ретрансляции проверен выше, но если он утечёт —
+  // перебор путей не должен стать дешёвым
+  const лимит = проверитьЧастоту(`relay:${path}`, 30, 60_000);
+  if (!лимит.можно) return слишкомЧасто(лимит.черезСекунд);
+
   const admin = getAdminSupabase();
   const { data, error } = await admin.rpc("stream_path_is_live", {
     check_path: path,

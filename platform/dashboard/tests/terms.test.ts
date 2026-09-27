@@ -16,9 +16,9 @@ function client({
   return {
     client: {
       auth: {
-        getSession: vi
+        getUser: vi
           .fn()
-          .mockResolvedValue({ data: { session: userId ? { user: { id: userId } } : null } }),
+          .mockResolvedValue({ data: { user: userId ? { id: userId } : null } }),
       },
       from: vi.fn().mockReturnValue({ select, upsert }),
     } as unknown as SupabaseClient,

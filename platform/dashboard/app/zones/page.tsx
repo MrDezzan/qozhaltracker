@@ -17,8 +17,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ZonesPage() {
   const supabase = await getServerSupabase();
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) redirect("/login");
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) redirect("/login");
 
   const farmId = await findFarmId(supabase);
   if (!farmId) {

@@ -42,10 +42,22 @@ export function withBase(basePath: string, href: string): string {
   return href === "/" ? basePath : `${basePath}${href}`;
 }
 
-/** Активен ли раздел. Для «/» — только точное совпадение, иначе он
- *  подсвечивался бы всегда: любой путь начинается со слэша. */
-export function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+/**
+ * Активен ли раздел.
+ *
+ * Корень подсвечивается только при точном совпадении. Иначе он горит
+ * всегда: любой путь начинается с корня, и `startsWith` отвечает «да»
+ * на каждой странице.
+ *
+ * Корень — не обязательно «/». В показе он равен basePath, и первая
+ * версия этой проверки сравнивала href с «/» буквально. На живой ферме
+ * всё работало, а в показе «Сводка» оставалась выделенной на всех
+ * страницах, и на «/demo/alerts» горели сразу два раздела. Поэтому
+ * корень передаётся, а не угадывается.
+ */
+export function isActive(pathname: string, href: string, basePath = ""): boolean {
+  const корень = basePath || "/";
+  if (href === корень) return pathname === корень;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -86,7 +98,7 @@ export function TopNav({
         <nav className="flex items-center gap-1 overflow-x-auto whitespace-nowrap -mx-2 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((item) => {
             const href = withBase(basePath, item.href);
-            const active = isActive(pathname, href);
+            const active = isActive(pathname, href, basePath);
             return (
               <Link
                 key={item.href}

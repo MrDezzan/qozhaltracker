@@ -119,7 +119,7 @@ export function BottomNav({
       <ul className="mx-auto flex max-w-lg">
         {NAV.map((item) => {
           const href = withBase(basePath, item.href);
-          const active = isActive(pathname, href);
+          const active = isActive(pathname, href, basePath);
           return (
             <li key={item.href} className="flex-1">
               <Link

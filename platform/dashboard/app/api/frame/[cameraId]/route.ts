@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { проверитьЧастоту, слишкомЧасто } from "../../../../lib/rateLimit";
 import { getServerSupabase } from "../../../../lib/supabaseServer";
 import { SNAPSHOT_BUCKET, snapshotPath } from "../../../../lib/snapshots";
 
@@ -26,9 +27,37 @@ export async function GET(
   const { cameraId } = await context.params;
 
   const supabase = await getServerSupabase();
+  /*
+    getUser, а не getSession.
+
+    getSession только читает cookie и разбирает JWT — подпись он на
+    сервере не проверяет. То есть на вопрос «вошёл ли человек» он
+    отвечает по содержимому cookie, а cookie пишет кто угодно.
+    getUser спрашивает Supabase и получает ответ, которому можно верить.
+  */
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return new Response("Не авторизован", { status: 401 });
+  }
+
+  /*
+    Токен берём отдельно и только после проверки выше.
+
+    Сам по себе он здесь не пропуск: хранилище всё равно проверит его и
+    политики. Но решение «пускать или нет» принято по getUser, а не по
+    содержимому cookie.
+  */
+  /*
+    Интерфейс сам тянет кадр примерно раз в секунду на камеру, поэтому
+    предел щедрый. Он не про обычную работу, а про цикл в скрипте:
+    каждый кадр — это проксирование в хранилище за наш счёт.
+  */
+  const лимит = проверитьЧастоту(`frame:${userData.user.id}`, 180, 60_000);
+  if (!лимит.можно) return слишкомЧасто(лимит.черезСекунд);
+
   const { data: sessionData } = await supabase.auth.getSession();
-  const session = sessionData.session;
-  if (!session) {
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
     return new Response("Не авторизован", { status: 401 });
   }
 
@@ -58,14 +87,16 @@ export async function GET(
   try {
     upstream = await fetch(target, {
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
         apikey: key,
       },
       cache: "no-store",
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return new Response(`Хранилище недоступно: ${message}`, { status: 502 });
+    // Подробности — в журнал, наружу только факт. Текст сетевой ошибки
+    // содержит адрес и порт хранилища
+    console.error("[frame] хранилище недоступно", e);
+    return new Response("Хранилище недоступно", { status: 502 });
   }
 
   if (!upstream.ok) {

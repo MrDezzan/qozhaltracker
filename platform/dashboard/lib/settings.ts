@@ -1,3 +1,4 @@
+import { времяСуток } from "./validate";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -149,10 +150,15 @@ export const DAY_GUARD_OPTIONS = [
   },
 ] as const;
 
-/** Разумно ли выглядит охранное окно. Пустая строка — всё в порядке. */
+/**
+ * Разумно ли выглядит охранное окно. Пустая строка — всё в порядке.
+ *
+ * Проверялась только форма записи, поэтому «99:99» проходило насквозь и
+ * падало уже в Postgres на колонке типа `time` — с сырым текстом ошибки
+ * наружу. Диапазоны проверяются здесь, до запроса.
+ */
 export function validateGuardWindow(from: string, to: string): string {
-  const ok = /^\d{2}:\d{2}$/;
-  if (!ok.test(from) || !ok.test(to)) {
+  if (времяСуток(from) === null || времяСуток(to) === null) {
     return "Время указывается как 22:00";
   }
   return "";

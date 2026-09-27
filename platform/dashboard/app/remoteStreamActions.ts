@@ -27,8 +27,8 @@ export async function startRemoteStreamAction(
   }
 
   const supabase = await getServerSupabase();
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) {
     return { error: "Войдите заново" };
   }
 
@@ -52,8 +52,8 @@ export async function startRemoteStreamAction(
  */
 export async function stopRemoteStreamAction(sessionId: string): Promise<void> {
   const supabase = await getServerSupabase();
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return;
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return;
 
   await stopRemoteStream(supabase, sessionId);
 }

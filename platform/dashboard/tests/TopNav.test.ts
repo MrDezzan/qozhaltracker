@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isActive, shouldHide } from "../components/ui/TopNav";
+import { isActive, shouldHide, withBase } from "../components/ui/TopNav";
 
 describe("подсветка активного раздела", () => {
   it("обзор подсвечен только на самом обзоре", () => {
@@ -26,6 +26,32 @@ describe("подсветка активного раздела", () => {
 
   it("чужой раздел не подсвечен", () => {
     expect(isActive("/zones", "/animals")).toBe(false);
+  });
+
+  /*
+    Показ живёт под своей приставкой, и корень у него не «/», а «/demo».
+    Первая версия проверки сравнивала с «/» буквально, поэтому «Сводка»
+    в показе была выделена на каждой странице, а на «/demo/alerts»
+    горели сразу два раздела.
+  */
+  it("в показе корнем считается приставка, а не «/»", () => {
+    const сводка = withBase("/demo", "/");
+    expect(сводка).toBe("/demo");
+
+    expect(isActive("/demo", сводка, "/demo")).toBe(true);
+    expect(isActive("/demo/alerts", сводка, "/demo")).toBe(false);
+    expect(isActive("/demo/animals", сводка, "/demo")).toBe(false);
+    expect(isActive("/demo/zones", сводка, "/demo")).toBe(false);
+  });
+
+  it("в показе подсвечен ровно один раздел", () => {
+    const разделы = ["/", "/alerts", "/animals", "/zones", "/settings"];
+    for (const путь of ["/demo", "/demo/alerts", "/demo/animals", "/demo/zones"]) {
+      const активные = разделы.filter((h) =>
+        isActive(путь, withBase("/demo", h), "/demo")
+      );
+      expect(активные).toHaveLength(1);
+    }
   });
 });
 

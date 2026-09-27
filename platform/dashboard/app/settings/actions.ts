@@ -39,7 +39,10 @@ export async function setTimezoneAction(
       target_farm_id: farmId,
       new_timezone: timezone,
     });
-    if (error) return { status: "error", message: error.message };
+    if (error) {
+      console.error("[settings] сохранение", error);
+      return { status: "error", message: "Не удалось сохранить" };
+    }
 
     refresh();
     return { status: "ok", message: "Часовой пояс сохранён" };
@@ -77,7 +80,10 @@ export async function setRetentionAction(
       },
       { onConflict: "farm_id" }
     );
-    if (error) return { status: "error", message: error.message };
+    if (error) {
+      console.error("[settings] сохранение", error);
+      return { status: "error", message: "Не удалось сохранить" };
+    }
 
     refresh();
     return { status: "ok", message: "Сроки хранения сохранены" };
@@ -115,7 +121,10 @@ export async function setGuardWindowAction(
       { farm_id: farmId, guard_from: from, guard_to: to, guard_day_severity: daySeverity },
       { onConflict: "farm_id" }
     );
-    if (error) return { status: "error", message: error.message };
+    if (error) {
+      console.error("[settings] сохранение", error);
+      return { status: "error", message: "Не удалось сохранить" };
+    }
 
     refresh();
     return {

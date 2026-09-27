@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function TermsPage() {
   const supabase = await getServerSupabase();
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) redirect("/login");
+  const { data: sessionData } = await supabase.auth.getUser();
+  if (!sessionData.user) redirect("/login");
 
   const status = await getTermsStatus(supabase);
   if (status.accepted) redirect("/");

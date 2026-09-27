@@ -85,7 +85,8 @@ export async function createFarmZoneAction(
     });
 
     if (error) {
-      return { status: "error", message: `Не удалось сохранить зону: ${error.message}` };
+      console.error("[zones] save", error);
+      return { status: "error", message: "Не удалось сохранить зону" };
     }
 
     refresh();
@@ -150,7 +151,10 @@ export async function calibrateCameraAction(
       pixel_length: pixelLength,
     });
 
-    if (error) return { status: "error", message: error.message };
+    if (error) {
+      console.error("[zones] сохранение", error);
+      return { status: "error", message: "Не удалось сохранить" };
+    }
 
     refresh();
     return { status: "ok", scale: Number(data) };

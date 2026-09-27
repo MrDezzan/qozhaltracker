@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getServerSupabase } from "../../../../lib/supabaseServer";
 import { requireAdmin } from "../../../../lib/adminGuard";
-import { isValidPolygon, polygonArea } from "../../../../lib/zones";
+import { isValidPolygon, polygonArea, ZONE_KIND_LABELS, ZoneKind } from "../../../../lib/zones";
+import { этоUuid, изСписка } from "../../../../lib/validate";
 import { describeError } from "../../../../lib/retry";
 
 export type ZoneActionState = { status: "idle" } | { status: "error"; message: string };
@@ -19,11 +20,30 @@ export async function createZoneAction(
   const farmId = String(formData.get("farmId") ?? "");
   const cameraId = String(formData.get("cameraId") ?? "");
   const name = String(formData.get("name") ?? "").trim();
-  const kind = String(formData.get("kind") ?? "other");
   const rawPolygon = String(formData.get("polygon") ?? "");
 
-  if (!name) {
+  /*
+    Вид зоны — по списку, а не как пришло.
+
+    В соседнем файле app/zones/actions.ts проверка по списку есть, а
+    здесь её не было: значение из формы уходило в базу как есть. Вид
+    зоны решает, как считается визит (пауза 60 с у кормушки против 10 с
+    у прохода), поэтому произвольная строка здесь не опечатка, а
+    неверный учёт кормления.
+  */
+  const kind = изСписка<ZoneKind>(
+    formData.get("kind"),
+    Object.keys(ZONE_KIND_LABELS) as ZoneKind[]
+  );
+
+  if (!name || name.length > 120) {
     return { status: "error", message: "Укажите название зоны" };
+  }
+  if (!kind) {
+    return { status: "error", message: "Выберите вид зоны" };
+  }
+  if (!этоUuid(farmId) || !этоUuid(cameraId)) {
+    return { status: "error", message: "Камера указана неверно" };
   }
 
   let polygon: unknown;
@@ -50,7 +70,8 @@ export async function createZoneAction(
       .insert({ farm_id: farmId, camera_id: cameraId, name, kind, polygon });
 
     if (error) {
-      return { status: "error", message: `Не удалось сохранить зону: ${error.message}` };
+      console.error("[zones] insert", error);
+      return { status: "error", message: "Не удалось сохранить зону" };
     }
 
     revalidatePath(`/admin/farms/${farmId}`);
@@ -64,8 +85,10 @@ export async function deleteZoneAction(formData: FormData): Promise<void> {
   const farmId = String(formData.get("farmId") ?? "");
   const zoneId = String(formData.get("zoneId") ?? "");
 
+  if (!этоUuid(farmId) || !этоUuid(zoneId)) return;
+
   const supabase = await getServerSupabase();
   await requireAdmin(supabase);
-  await supabase.from("zones").delete().eq("id", zoneId);
+  await supabase.from("zones").delete().eq("id", zoneId).eq("farm_id", farmId);
   revalidatePath(`/admin/farms/${farmId}`);
 }

@@ -4,8 +4,10 @@ import { getRole, requireAdmin, isDeviceOffline } from "../lib/adminGuard";
 function makeMockClient(userId: string | null, role: string | null, error: unknown = null) {
   return {
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: userId ? { user: { id: userId } } : null },
+      // getUser, а не getSession: код проверяет подпись токена на
+      // сервере, и заглушка обязана повторять ту же форму ответа
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: userId ? { id: userId } : null },
       }),
     },
     from: vi.fn().mockReturnValue({

@@ -4,6 +4,21 @@ import { revalidatePath } from "next/cache";
 import { getServerSupabase } from "../../../../lib/supabaseServer";
 import { requireAdmin } from "../../../../lib/adminGuard";
 import { DEFAULT_PLACEMENT, isPlacement } from "../../../../lib/cameras";
+import { проверитьАдрес } from "../../../../lib/safeFetchUrl";
+import { этоUuid } from "../../../../lib/validate";
+
+/**
+ * Текст ошибки базы наружу не отдаётся.
+ *
+ * В сообщении Postgres приезжают имена таблиц, колонок и ограничений —
+ * готовая схема для того, кто её собирает. Человеку от этого текста
+ * пользы нет, а разобраться нужно нам, поэтому подробности идут в
+ * серверный журнал.
+ */
+function скрытьОшибку(где: string, ошибка: unknown, дляЧеловека: string): CameraActionState {
+  console.error(`[admin/cameras] ${где}`, ошибка);
+  return { status: "error", message: дляЧеловека };
+}
 
 export type CameraActionState = { status: "idle" } | { status: "error"; message: string };
 
@@ -20,6 +35,18 @@ export async function addCameraAction(
 
   if (!name || !sourceUri) {
     return { status: "error", message: "Заполните название и адрес потока" };
+  }
+  if (!этоUuid(farmId)) {
+    return { status: "error", message: "Ферма указана неверно" };
+  }
+  if (name.length > 120 || sourceUri.length > 500 || streamUrl.length > 500) {
+    return { status: "error", message: "Слишком длинное значение" };
+  }
+  if (streamUrl) {
+    const проверка = await проверитьАдрес(streamUrl);
+    if (!проверка.ok) {
+      return { status: "error", message: `Адрес потока отклонён: ${проверка.причина}` };
+    }
   }
 
   try {
@@ -38,7 +65,7 @@ export async function addCameraAction(
       });
 
     if (error) {
-      return { status: "error", message: `Не удалось добавить камеру: ${error.message}` };
+      return скрытьОшибку("insert", error, "Не удалось добавить камеру");
     }
 
     revalidatePath(`/admin/farms/${farmId}`);
@@ -51,6 +78,7 @@ export async function addCameraAction(
 export async function deleteCameraAction(formData: FormData): Promise<void> {
   const farmId = String(formData.get("farmId") ?? "");
   const cameraId = String(formData.get("cameraId") ?? "");
+  if (!этоUuid(farmId) || !этоUuid(cameraId)) return;
 
   const supabase = await getServerSupabase();
   await requireAdmin(supabase);
@@ -80,9 +108,32 @@ export async function updateCameraAction(
   if (!name) {
     return { status: "error", message: "Название не может быть пустым" };
   }
+  if (!этоUuid(farmId) || !этоUuid(cameraId)) {
+    return { status: "error", message: "Камера указана неверно" };
+  }
+  if (name.length > 120 || streamUrl.length > 500) {
+    return { status: "error", message: "Слишком длинное значение" };
+  }
+  if (streamUrl) {
+    const проверка = await проверитьАдрес(streamUrl);
+    if (!проверка.ok) {
+      return { status: "error", message: `Адрес потока отклонён: ${проверка.причина}` };
+    }
+  }
 
   try {
     const supabase = await getServerSupabase();
+    /*
+      requireAdmin здесь не для красоты симметрии с соседними действиями.
+
+      Серверное действие вызывается по собственному адресу и через
+      app/admin/layout.tsx не проходит — проверка в разметке админки его
+      не прикрывает. Без этой строки владелец фермы мог сам себе
+      переписать stream_url (вход для SSRF) и выключить security_enabled,
+      то есть снять охрану со своей камеры.
+    */
+    await requireAdmin(supabase);
+
     const { error } = await supabase
       .from("cameras")
       .update({
@@ -94,7 +145,7 @@ export async function updateCameraAction(
       .eq("id", cameraId);
 
     if (error) {
-      return { status: "error", message: `Не удалось сохранить: ${error.message}` };
+      return скрытьОшибку("update", error, "Не удалось сохранить");
     }
 
     revalidatePath(`/admin/farms/${farmId}`);

@@ -45,7 +45,8 @@ export async function reviewFrameAction(
     if (error) {
       // У ошибки Supabase берём `.message`: describeError отдал бы
       // «[object Object]», потому что это не Error, а обычный объект
-      return { status: "error", message: error.message };
+      console.error("[training] review", error);
+      return { status: "error", message: "Не удалось сохранить оценку" };
     }
 
     // Функция вернула false — вердикт этому кадру уже стоял. Такое

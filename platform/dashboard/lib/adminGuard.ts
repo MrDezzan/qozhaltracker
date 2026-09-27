@@ -4,8 +4,8 @@ import { НЕ_ВОШЁЛ } from "./auth";
 export type Role = "admin" | "owner" | "device";
 
 export async function getRole(client: SupabaseClient): Promise<Role | null> {
-  const { data: sessionData } = await client.auth.getSession();
-  const userId = sessionData.session?.user.id;
+  const { data: sessionData } = await client.auth.getUser();
+  const userId = sessionData.user?.id;
   if (!userId) return null;
 
   const { data, error } = await client

@@ -6,8 +6,8 @@ import { requireFarmId, describeAuthError, НЕ_ВОШЁЛ } from "../lib/auth";
 function makeMockClient(userId: string | null, farmRow: unknown, farmError: unknown = null) {
   return {
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: userId ? { user: { id: userId } } : null },
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: userId ? { id: userId } : null },
       }),
     },
     from: vi.fn().mockReturnValue({
