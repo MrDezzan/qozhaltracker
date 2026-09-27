@@ -1,0 +1,2578 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Qozhal — AI-камеры присмотрят за каждым вашим животным</title>
+  <meta name="description"
+    content="Вы будете знать вес, привес и самочувствие каждого животного. Наши AI-камеры, без бирок, ошейников и датчиков.">
+  <meta name="theme-color" content="#0c2038">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Qozhal — AI-камеры присмотрят за каждым вашим животным">
+  <meta property="og:description"
+    content="Вес, привес и здоровье каждого животного на ваших AI-камерах. Без бирок и датчиков.">
+  <meta property="og:locale" content="ru_RU">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Onest: кириллица рисовалась как основная, казахские ә ғ қ ң ө ұ ү һ
+     на месте. Переменная насыщенность 400-800 — вся иерархия страницы
+     строится одним семейством. -->
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Заставка включается отсюда, и здесь же назначается её снятие.
+     Предохранитель стоит в первой строке нарочно: основной скрипт может
+     не выполниться вовсе, и тогда снимать заставку станет некому. -->
+  <script>
+    document.documentElement.className += " booting";
+    window.setTimeout(function () {
+      document.documentElement.classList.remove("booting", "boot-out");
+    }, 4000);
+  </script>
+
+  <link rel="icon" href="favicon.png" sizes="128x128">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <style>
+    /* ====================================================================
+     V4 — ВИЗИТКА С АНКЕТОЙ
+
+     Страница сначала рассказывает о продукте, а в конце спрашивает про
+     ферму и отправляет ответы одним сообщением в WhatsApp.
+
+     ЦЕН НА СТРАНИЦЕ НЕТ — ни точных, ни примерных, и это решение, а не
+     упущение. Сумма, вырванная из разговора, отпугивает: она всегда
+     выглядит либо дорого (человек ещё не понял, за что), либо
+     подозрительно дёшево. Всё про деньги — в переписке, когда уже
+     понятно, что именно человеку нужно.
+
+     Отсюда и другой визуальный язык. В v2-v3 всё держалось на волосяных
+     линейках и пустоте — это язык печатной статьи. Инструменту нужны
+     поверхности: поля, панели, границы, за которые цепляется глаз.
+     Поэтому здесь появились плоскости (--surface) и настоящие рамки
+     (--line), которых там не было принципиально.
+
+     Что осталось прежним и почему: цвета сняты пипеткой с логотипа,
+     теней и градиентов нет, скругление 3 пикселя. Это не инерция — это
+     то, из-за чего страница не выглядит собранной из чужих блоков.
+     ==================================================================== */
+    :root {
+      --navy: #0c2038;
+      /* цвет знака */
+      --navy-2: #1b3857;
+      /* панель внутри синей секции */
+      --sky: #3cc8fc;
+      /* голубой со знака: только на тёмном */
+
+      --milk: #f8f6f1;
+      /* лист, на котором лежит страница */
+      --surface: #fffefb;
+      /* панель поверх него */
+
+      /* Шалфей: поле вокруг листа и заливка значков. Не декор, а то, из-за
+       чего страница читается как лист бумаги, а не как бесконечная
+       простыня */
+      --sage: #a5af8c;
+      --sage-soft: #ccd4b8;
+      --sage-bg: #eef1e5;
+      --sage-deep: #5c6a43;
+      /* текст по молочному: 5.40 */
+
+      /* Терракота: цвет действия.
+       У неё есть тонкость. В макете кнопка подписана белым, а белый на
+       #d7885e даёт 2.77 при норме 4.5: подпись не читается ни на
+       солнце, ни на плохом проекторе. Поэтому буквы на кнопке тёмные,
+       синие: 5.81. Выглядит так же тепло.
+       Сама заливка к молочному даёт 2.52, то есть край кнопки на
+       светлом теряется, а WCAG 1.4.11 требует 3:1 для границы органа
+       управления. Её даёт контур --clay-deep. */
+      --clay: #d7885e;
+      --clay-soft: #f4dfd2;
+      --clay-deep: #b4522a;
+      /* белый по нему: 5.02 */
+
+      /* Текст. Контраст к панели: 16.3 / 8.1 / 5.8 */
+      --navy-70: #40506a;
+      --navy-45: #57667e;
+      --accent: #0b6284;
+      /* тон 197°, родня голубому со знака */
+
+      --milk-70: #c3ccd8;
+      /* второй текст на синем */
+      --milk-45: #93a3b5;
+      /* мелкий текст на синем */
+
+      /* Две границы, и разница между ними не декоративная.
+       --line рисует панель: панель и так опознаётся сменой фона, к ней
+       требований по контрасту нет.
+       --line-strong рисует поля ввода и кнопки: контур — единственное,
+       по чему поле опознаётся как поле, и WCAG 1.4.11 требует для него
+       3:1. У #8e887e к панели 3.49, к фону страницы 3.20 */
+      --line: #ddd8ce;
+      --line-strong: #8e887e;
+      --line-on-navy: rgba(246, 244, 239, .22);
+
+      --wrap: 1200px;
+      --header-h: 76px;
+
+      /* Ширина телефона. Живёт ЗДЕСЬ, а не в .phone: её читает
+         grid-template-columns у .how-grid, то есть РОДИТЕЛЬ телефона.
+         Переменные наследуются вниз, не вверх — объявленная в .phone,
+         она у .how-grid не существует, вся строка
+         grid-template-columns становится недействительной, сетка
+         молча схлопывается в одну колонку, и телефон уезжает в центр.
+         Ровно это и случилось. */
+      --phone-w: 280px;
+
+      /* Скругления с макета. Прежние 3 пикселя объяснялись тем, что
+       острый угол читается как рабочий инструмент; новый макет решает
+       иначе, и это решение владельца продукта. Важно, что цифра одна на
+       сайт и на платформу */
+      --r-sm: 10px;
+      /* Рамка распознавания. Почти острый угол: так её рисует сама
+         платформа, и так она не путается с карточками интерфейса */
+      --r-track: 3px;
+      --r-card: 18px;
+      --r-pill: 999px;
+
+      /*
+        Полей вокруг листа больше нет.
+
+        Сначала страница лежала шалфейным полем наружу, как в макете. На
+        макете это смотрелось, потому что макет это картинка в рамке. В
+        браузере вышло другое: цветная полоса по бокам и между блоками,
+        которая ничего не значит и просто отъедает ширину строки. Ширина
+        на сайте дороже украшения.
+
+        Шалфей остался там, где работает: кружки с номерами шагов, первая
+        карточка в ряду, шапки таблиц. Ноль оставлен переменной, а не
+        вычищен из стилей: вернуть поле это правка одной строки.
+      */
+      --gutter: 0px;
+      --sans: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+      /* Шкала слоёв: z-index не назначается по случаю */
+      --z-float: 50;
+      --z-skip: 60;
+      --z-boot: 100;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+      background: var(--milk);
+      /* Липкая шапка перекрывает и якорь, и элемент, на который встал
+       фокус при ходьбе по Tab. scroll-padding закрывает оба случая */
+      scroll-padding-top: calc(var(--header-h) + 16px);
+      background: var(--navy);
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--milk);
+      color: var(--navy);
+      font-size: 17px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "kern" 1, "liga" 1;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -.025em;
+      text-wrap: balance;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* Цифры одной ширины. В калькуляторе числа меняются на лету, и без
+     этого результат дёргается при каждом нажатии */
+    .num {
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: var(--wrap);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Только для читалки с экрана: видеть эту строку не нужно, слышать —
+     нужно. display:none её бы скрыл и от читалки тоже */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* --------------------------------------------------- ссылка в обход шапки */
+    .skip {
+      position: absolute;
+      left: 16px;
+      top: -100px;
+      z-index: var(--z-skip);
+      background: var(--sky);
+      color: var(--navy);
+      padding: 13px 20px;
+      border-radius: var(--r-sm);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .skip:focus {
+      top: 12px;
+    }
+
+    /* ------------------------------------------------------------- шапка */
+    /*
+    Шапка и первый экран лежат в одной тёмной карточке со скруглением, а
+    не растянуты на всю ширину окна. Из-за этого страница читается как
+    лист, положенный на стол, и это главное, что отличает новый вид от
+    прежнего.
+
+    Липкой шапка больше не будет: приклеенная полоса поверх
+    скруглённой карточки обрезает её угол на прокрутке, и это заметно
+    сильнее, чем удобство от липкости на странице в пять экранов.
+  */
+    /*
+    Шапка и первый экран выглядят одной тёмной карточкой, но обёртки над
+    ними нет. Обёртка пересекла бы границу <main>, а такой div браузер
+    закрывает сам, и вёрстка разъезжается. Поэтому карточка собирается
+    из двух соседей: шапка даёт верхние скруглённые углы, герой нижние.
+  */
+    header {
+      background: var(--navy);
+      color: var(--milk);
+      margin: var(--gutter) var(--gutter) 0;
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .sheet-light {
+      background: var(--milk);
+      margin: var(--gutter);
+      overflow: hidden;
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: var(--header-h);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo img {
+      display: block;
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .logo b {
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -.03em;
+      color: var(--milk);
+    }
+
+    .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .langs {
+      display: flex;
+      gap: 28px;
+    }
+
+    .langs button {
+      position: relative;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--milk-70);
+      background: none;
+      border: 0;
+      padding: 4px 0;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+
+    .langs button:hover {
+      color: var(--milk);
+    }
+
+    .langs button[aria-pressed="true"] {
+      color: var(--milk);
+      border-bottom-color: var(--sky);
+    }
+
+    /* Надпись «Рус» — 27 на 23 пикселя, пальцем не попасть. Невидимый
+     псевдоэлемент растягивает зону нажатия до 47 на 55, не сдвигая ни
+     букв, ни подчёркивания. Промежуток 28 оставляет между зонами 8 */
+    .langs button::after {
+      content: "";
+      position: absolute;
+      inset: -12px -10px;
+    }
+
+    /* ------------------------------------------------------------ кнопки */
+    /*
+    Кнопка-пилюля с тёплой заливкой и ТЁМНЫМИ буквами.
+
+    Белые буквы по терракоте дают 2.77 при норме 4.5. В макете они
+    белые, и это единственное место, где макет пришлось поправить:
+    подпись на главной кнопке обязана читаться.
+  */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font: inherit;
+      font-weight: 600;
+      font-size: 16px;
+      padding: 15px 30px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--clay-deep);
+      background: var(--clay);
+      color: var(--navy);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .btn:hover {
+      background: var(--clay-deep);
+      border-color: var(--clay-deep);
+      color: var(--milk);
+    }
+
+    .btn:active {
+      background: #9c461f;
+      border-color: #9c461f;
+      color: var(--milk);
+    }
+
+    .btn-sm {
+      font-size: 14px;
+      padding: 11px 22px;
+    }
+
+    .btn-wide {
+      width: 100%;
+    }
+
+    /* Второстепенная: только контур. Рядом с тёплой заливкой она сразу
+     читается как «не эта» */
+    .btn-line {
+      background: none;
+      color: var(--navy);
+      border-color: var(--navy);
+    }
+
+    .btn-line:hover {
+      background: var(--navy);
+      color: var(--milk);
+      border-color: var(--navy);
+    }
+
+    /* На тёмном контурная кнопка выворачивается, заливная не меняется:
+     терракота одинаково видна и на синем, и на молочном */
+    .on-navy .btn-line {
+      background: none;
+      color: var(--milk);
+      border-color: var(--line-on-navy);
+    }
+
+    .on-navy .btn-line:hover {
+      background: var(--milk);
+      color: var(--navy);
+      border-color: var(--milk);
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      /* След фокуса повторяет форму того, что обводит: на пилюле он
+       должен быть пилюлей, иначе выглядит приклеенным прямоугольником */
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: var(--r-pill);
+    }
+
+    .on-navy a:focus-visible,
+    .on-navy button:focus-visible,
+    header a:focus-visible,
+    header button:focus-visible,
+    .calc-out a:focus-visible {
+      outline-color: var(--sky);
+    }
+
+    /* --------------------------------------------------------------- герой */
+    /* Короткий. Задача первого экрана здесь не рассказать, а довести до
+     калькулятора: он ниже на один экран и делает всю работу */
+    /*
+    Первый экран: фотография справа, текст слева.
+
+    Фотография заведена фоном, а не тегом img, и лежит в правой половине
+    с растушёвкой к синему. Причина не в красоте: заголовок в три строки
+    поверх стада не читается ни в зале, ни на телефоне, а обрезать
+    фотографию по-разному под каждую ширину экрана тегом img нельзя.
+
+    Если файла hero.jpg нет, остаётся ровная синяя плоскость. Страница
+    при этом целая: заголовок и кнопки на месте, и ничего не выглядит
+    сломанным.
+  */
+    .hero {
+      position: relative;
+      color: var(--milk);
+      background: var(--navy);
+      margin: 0 var(--gutter);
+      padding: clamp(56px, 8vw, 104px) 0 clamp(60px, 8vw, 112px);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("hero.jpg");
+      background-size: cover;
+      background-position: 70% 50%;
+      /* Слева фотография растворяется в синем: там стоит заголовок */
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 62%, #000 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 62%, #000 100%);
+    }
+
+    .hero::after {
+      /* Поверх фотографии синяя вуаль: без неё белые буквы на светлом
+       небе пропадают, а небо в кадре всегда светлое */
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+          var(--navy) 0%, var(--navy) 34%,
+          rgba(12, 32, 56, .72) 58%, rgba(12, 32, 56, .35) 100%);
+    }
+
+    .hero>.wrap {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 5.6vw, 66px);
+      line-height: 1.02;
+      letter-spacing: -.035em;
+      max-width: 15ch;
+      text-transform: uppercase;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      font-weight: 700;
+      color: var(--milk);
+    }
+
+    .hero .lede {
+      margin-top: 26px;
+      font-size: clamp(17px, 1.5vw, 20px);
+      color: var(--milk-70);
+      max-width: 46ch;
+    }
+
+    @media (max-width: 720px) {
+
+      /* На телефоне фотография уходит вниз, под текст: сбоку для неё
+       просто нет ширины */
+      .hero::before {
+        -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 70%);
+        mask-image: linear-gradient(180deg, transparent 0%, #000 70%);
+      }
+
+      .hero::after {
+        background: linear-gradient(180deg, var(--navy) 0%, var(--navy) 42%, rgba(12, 32, 56, .6) 100%);
+      }
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    /* -------------------------------------------------------------- секции */
+    section {
+      padding: clamp(56px, 8vw, 96px) 0;
+      scroll-margin-top: var(--header-h);
+    }
+
+    section.on-navy {
+      background: var(--navy);
+      color: var(--milk);
+    }
+
+    .on-navy h2,
+    .on-navy h3 {
+      color: var(--milk);
+    }
+
+    .on-navy .sub {
+      color: var(--milk-70);
+    }
+
+    /* Заголовок раздела заглавными и по центру: так в макете, и это
+     единственное, что отделяет один раздел от другого на длинной
+     молочной странице без линеек */
+    h2 {
+      font-size: clamp(26px, 3.4vw, 40px);
+      letter-spacing: -.02em;
+      max-width: 24ch;
+      text-transform: uppercase;
+    }
+
+    .sub {
+      margin-top: 16px;
+      font-size: 18px;
+      color: var(--navy-70);
+      max-width: 56ch;
+    }
+
+    .sec-head {
+      margin-bottom: clamp(32px, 4vw, 52px);
+    }
+
+    .sec-head-mid {
+      text-align: center;
+    }
+
+    .sec-head-mid h2,
+    .sec-head-mid .sub {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /*
+      Полоска между разделами.
+
+      Без полей вокруг листа секции на молочном фоне стали сливаться:
+      где кончается одно и начинается другое, видно только по отступу.
+      Тонкая шалфейная линия разделяет их, не добавляя на страницу
+      ещё одной плоскости.
+    */
+    .sec-line {
+      height: 1px;
+      background: var(--sage);
+      opacity: 0.45;
+      margin: 0 auto;
+      max-width: calc(var(--wrap) - 48px);
+    }
+
+    /* ============================================================ КАЛЬКУЛЯТОР */
+    /* Слева вопросы, справа ответ. Ответ пересчитывается на каждое
+     нажатие — никакой кнопки «рассчитать»: она заставляет заполнить всё
+     вслепую и только потом узнать, попал ты в бюджет или нет */
+    .calc {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: var(--r-card);
+      overflow: hidden;
+    }
+
+    .calc-in {
+      background: var(--surface);
+      padding: clamp(24px, 3vw, 40px);
+    }
+
+    .calc-out {
+      background: var(--navy);
+      color: var(--milk);
+      padding: clamp(24px, 3vw, 40px);
+    }
+
+    .field {
+      margin-bottom: 26px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Подпись всегда видима и всегда над полем. Подпись-заполнитель
+     внутри поля исчезает, как только человек начал печатать, — и он
+     уже не помнит, что от него хотели */
+    .field>label,
+    .field>.lbl {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .hint {
+      font-size: 13.5px;
+      color: var(--navy-45);
+      margin-bottom: 10px;
+    }
+
+    /* Ввод числа со стрелками. Стрелки нужны не для красоты: на телефоне
+     набрать «250» в поле проще нажатием, чем клавиатурой */
+    .stepper {
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+      max-width: 260px;
+    }
+
+    .stepper button {
+      flex: 0 0 48px;
+      height: 48px;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1;
+      background: var(--surface);
+      color: var(--navy);
+      border: 1px solid var(--line-strong);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+
+    .stepper button:first-child {
+      border-radius: var(--r-sm) 0 0 var(--r-sm);
+      border-right: 0;
+    }
+
+    .stepper button:last-child {
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      border-left: 0;
+    }
+
+    .stepper button:hover {
+      background: var(--navy);
+      color: var(--milk);
+      border-color: var(--navy);
+    }
+
+    .stepper button:active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--milk);
+    }
+
+    .stepper input {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 48px;
+      text-align: center;
+      font: inherit;
+      font-size: 19px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums lining-nums;
+      color: var(--navy);
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 0;
+      -moz-appearance: textfield;
+    }
+
+    .stepper input::-webkit-outer-spin-button,
+    .stepper input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Выбор из двух. Не радиокнопки-точки: на телефоне в точку не попасть,
+     а нажимать хочется по всей плашке */
+    .choice {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .choice button {
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      min-height: 48px;
+      padding: 12px 20px;
+      background: var(--surface);
+      color: var(--navy);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-pill);
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .choice button:hover {
+      border-color: var(--navy);
+    }
+
+    .choice button[aria-pressed="true"] {
+      background: var(--navy);
+      color: var(--milk);
+      border-color: var(--navy);
+    }
+
+    /* --------------------------------------------------------- ответ справа */
+    /* Подпись над ответом тёплая, как кнопка: это два места на странице,
+     где человек видит результат своих действий */
+    .out-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--clay-soft);
+    }
+
+    .out-list {
+      margin-top: 22px;
+    }
+
+    .out-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line-on-navy);
+    }
+
+    .out-row:first-child {
+      border-top: 1px solid var(--line-on-navy);
+    }
+
+    .out-row dt {
+      color: var(--milk-70);
+      font-size: 15.5px;
+    }
+
+    .out-row dd {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums lining-nums;
+      white-space: nowrap;
+    }
+
+    /* Замечание, которое меняется от ответов. Это и есть смысл всей
+     затеи: не «вот прайс», а «вот что именно у вас» */
+    .out-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--sky);
+      background: var(--navy-2);
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--milk-70);
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    }
+
+    .out-cta {
+      margin-top: 22px;
+    }
+
+    .out-small {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--milk-45);
+      line-height: 1.5;
+    }
+
+    /* Поле, которое появляется после «да». Спрашивать «на сколько голов
+     площадка» у того, у кого площадки нет, — значит заставлять читать
+     лишнее и додумывать, что вписать */
+    .sub-field {
+      margin-top: 16px;
+      padding-left: 18px;
+      border-left: 2px solid var(--line);
+    }
+
+    .sub-field[hidden] {
+      display: none;
+    }
+
+    /* Обязательные поля помечены, и это не украшение: без пометки человек
+     доходит до кнопки и только там узнаёт, что чего-то не хватает */
+    .req {
+      color: var(--accent);
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    /* Незаполненное поле после попытки отправить */
+    .field.bad .stepper input,
+    .field.bad .stepper button,
+    .field.bad .text-in {
+      border-color: #a12a1e;
+    }
+
+    .field.bad .choice button {
+      border-color: #a12a1e;
+    }
+
+    .err {
+      margin-top: 8px;
+      font-size: 13.5px;
+      color: #8f2318;
+      font-weight: 500;
+    }
+
+    .err[hidden] {
+      display: none;
+    }
+
+    /* Сводка того, чего не хватает. Ставится НАД полями и получает фокус:
+     сообщение под кнопкой человек не увидит, если кнопка внизу
+     длинного списка */
+    .summary {
+      margin-bottom: 24px;
+      padding: 16px 18px;
+      background: #fdf0ee;
+      border: 1px solid #a12a1e;
+      border-left-width: 3px;
+      border-radius: var(--r-sm);
+      color: #7a1e14;
+    }
+
+    .summary[hidden] {
+      display: none;
+    }
+
+    .summary h3 {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: #7a1e14;
+    }
+
+    .summary ul {
+      display: grid;
+      gap: 4px;
+    }
+
+    .summary a {
+      color: #7a1e14;
+      font-size: 14.5px;
+    }
+
+    .text-in {
+      width: 100%;
+      max-width: 260px;
+      height: 48px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 16px;
+      color: var(--navy);
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-sm);
+    }
+
+    /* ------------------------------------------------------------- шаги */
+    .steps {
+      display: grid;
+      gap: 14px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 22px;
+      align-items: start;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-card);
+      padding: 26px;
+    }
+
+    /* Номер шага в шалфейном кружке: в макете так, и кружок заодно
+     держит ряд шагов зрительно вместе */
+    .step-n {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: var(--r-pill);
+      background: var(--sage-bg);
+      color: var(--sage-deep);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .step h3 {
+      font-size: 21px;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      color: var(--navy-70);
+      font-size: 16px;
+    }
+
+    /* ---------------------------------------------------------- телефон */
+    .how-grid {
+      display: grid;
+      gap: 28px;
+    }
+
+    @media (min-width: 1000px) {
+      .how-grid {
+        grid-template-columns: 1fr var(--phone-w);
+        align-items: center;
+        gap: 44px;
+      }
+    }
+
+    /*
+      ТЕЛЕФОН: ПЯТЬ ЧИСЕЛ, И БОЛЬШЕ НИЧЕГО НЕ ТРОГАТЬ
+
+      Сначала корпус был фоном с подобранными на глаз `inset: -8px` и
+      `background-size: 100% 100%`. Так рамку приходится подгонять к
+      кадру, кадр к рамке, и оба уезжают при любой смене ширины. Кадр
+      вылезал за корпус, а поднять телефон по высоте было нечем.
+
+      Теперь наоборот: размер задаёт САМ png корпуса, а экран — это
+      прямоугольник внутри него, заданный в процентах от картинки.
+      Проценты берутся один раз линейкой и больше не меняются.
+
+      ВАЖНО: png должен быть обрезан ВПЛОТНУЮ к корпусу. Исходный файл
+      был квадратом 1080×1080 с корпусом 425×878 посередине и широкими
+      прозрачными полями. object-fit: contain вписывал этот квадрат в
+      коробку 280×578 — то есть ужимал его до 280×280, и рамка выходила
+      втрое меньше кадра и висела в середине. Поля обрезаны, оригинал
+      лежит рядом как phone-original.png.
+
+      Как измерить. Откройте phone.png в любом редакторе, посмотрите
+      размер картинки и прямоугольник выреза экрана. Дальше:
+
+        --screen-top    = отступ сверху  / высота png × 100
+        --screen-right  = отступ справа  / ширина png × 100
+        --screen-bottom = отступ снизу   / высота png × 100
+        --screen-left   = отступ слева   / ширина png × 100
+        --phone-ratio   = ширина png / высота png
+
+      Кадр внутри обрезается по экрану (object-fit: cover), поэтому его
+      пропорции значения не имеют: он никогда не вылезет за рамку.
+
+      --phone-lift поднимает или опускает телефон целиком, не трогая
+      остальное. Положительное значение — вверх.
+    */
+    .phone {
+      /* Ширина — в :root, её читает .how-grid. Здесь только геометрия. */
+
+      /* Отношение сторон png корпуса: 425 / 878 */
+      --phone-ratio: 0.4841;
+
+      /*
+        Вырез экрана. Измеренные по phone.png значения — 1.59% сверху и
+        снизу, 4.24% по бокам. Здесь они НАМЕРЕННО меньше измеренных.
+
+        Почему. Край выреза в png сглажен: там полупрозрачные пиксели.
+        Если положить кадр точно в вырез, по этой кромке просвечивает
+        фон страницы — те самые светлые полоски вдоль рамки. Совместить
+        точнее нельзя: сглаженная кромка занимает больше одного пикселя
+        и на разных ширинах округляется по-разному.
+
+        Поэтому кадр заводится ПОД рамку на пару пикселей. Лишнее
+        закрывает корпус, а просветов не остаётся ни при какой ширине.
+      */
+      --screen-top: 0.7%;
+      --screen-right: 3.2%;
+      --screen-bottom: 0.7%;
+      --screen-left: 3.2%;
+      --screen-radius: 9%;
+
+      /* Сдвиг по высоте. Вверх — положительное */
+      --phone-lift: 0px;
+
+      position: relative;
+      margin: 0;
+      justify-self: center;
+      width: var(--phone-w);
+      aspect-ratio: var(--phone-ratio);
+      transform: translateY(calc(var(--phone-lift) * -1));
+    }
+
+    /*
+      Корпус. Именно img, а не фон: у картинки есть свои пропорции, и
+      пусть она сама решает, как лечь. alt пустой — если файла нет,
+      браузер не рисует значок битой картинки, и остаётся один экран со
+      скруглением. Страница при этом целая.
+    */
+    .phone-body {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .phone-screen {
+      position: absolute;
+      top: var(--screen-top);
+      right: var(--screen-right);
+      bottom: var(--screen-bottom);
+      left: var(--screen-left);
+      border-radius: var(--screen-radius);
+      overflow: hidden;
+      background: var(--navy);
+    }
+
+    .phone-shot {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /*
+      РАМКИ ТРЕКИНГА
+
+      То же, что платформа рисует поверх кадра: найденное животное
+      обведено, рядом его номер. Координаты — в процентах от кадра, они
+      сняты с phone-cattle.jpg и живут в разметке, а не здесь: привязаны
+      к конкретной картинке, и при её замене меняются вместе с ней.
+
+      Цвет неслучаен. Обычное животное обводится светлым — это просто
+      «вижу и считаю». Терракота одна на весь кадр, у 0533, и означает
+      ровно то, что написано в подписи внизу: с этим животным что-то не
+      так. Если обвести терракотой всех, акцент перестанет что-либо
+      значить.
+    */
+    .track {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .box {
+      position: absolute;
+      border: 2px solid rgba(248, 246, 241, .92);
+      border-radius: var(--r-track);
+      /* Тёмный контур снаружи: светлая рамка на освещённой траве иначе
+         пропадает. outline, а не тень — теней в дизайн-коде нет */
+      outline: 1px solid rgba(12, 32, 56, .3);
+      opacity: 0;
+      transform: scale(1.06);
+      animation: box-in .45s cubic-bezier(.2, .8, .3, 1) forwards;
+    }
+
+    .box b {
+      position: absolute;
+      left: -2px;
+      top: -19px;
+      background: rgba(248, 246, 241, .92);
+      color: var(--navy);
+      font-size: 10px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums lining-nums;
+      letter-spacing: .02em;
+      padding: 1px 5px;
+      border-radius: var(--r-track) var(--r-track) 0 0;
+    }
+
+    /* Животное, о котором подпись внизу */
+    .box.watch {
+      border-color: var(--clay);
+      outline-color: rgba(12, 32, 56, .35);
+    }
+
+    .box.watch b {
+      background: var(--clay);
+      color: var(--navy);
+    }
+
+    @keyframes box-in {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /*
+      Тем, кто просил систему не анимировать, рамки показываются сразу.
+      Убирать их совсем нельзя: без них кадр перестаёт объяснять, что
+      делает продукт.
+    */
+    @media (prefers-reduced-motion: reduce) {
+      .box {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Подпись распознавания. Терракотовый контур поверх кадра — то же,
+       что рисует платформа, когда узнаёт животное */
+    .phone-tag {
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      bottom: 7%;
+      background: var(--milk);
+      color: var(--navy);
+      border-left: 3px solid var(--clay);
+      border-radius: var(--r-sm);
+      padding: 9px 12px;
+      font-size: 13.5px;
+      line-height: 1.3;
+    }
+
+    .phone-tag b {
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* --------------------------------------------------------- что даёт */
+    .defs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .def {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-card);
+      padding: 24px;
+    }
+
+    /* Первая карточка выделена шалфеем: глазу нужна точка, с которой
+     начинать читать ряд из шести одинаковых */
+    .def:first-child {
+      background: var(--sage-bg);
+      border-color: var(--sage-soft);
+    }
+
+    .def h3 {
+      font-size: 19px;
+      margin-bottom: 8px;
+    }
+
+    .def p {
+      color: var(--navy-70);
+      font-size: 15.5px;
+    }
+
+    /* ------------------------------------------------ висячие числа: боль */
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .facts>div {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: baseline;
+      background: var(--navy-2);
+      border-radius: var(--r-card);
+      padding: 22px 24px;
+    }
+
+    .facts b {
+      font-weight: 600;
+      font-size: clamp(22px, 2.4vw, 28px);
+      line-height: 1.1;
+      letter-spacing: -.03em;
+      color: var(--milk);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .facts p {
+      font-size: 15.5px;
+      color: var(--milk-70);
+    }
+
+    /* --------------------------------------------------------------- подвал */
+    footer {
+      background: var(--navy);
+      color: var(--milk-70);
+      margin: 0 var(--gutter) var(--gutter);
+      padding: 34px 0 calc(34px + env(safe-area-inset-bottom));
+      font-size: 14.5px;
+    }
+
+    .foot {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 14px 30px;
+    }
+
+    .foot>* {
+      min-width: 0;
+    }
+
+    .foot a {
+      color: var(--milk);
+      text-decoration: none;
+      border-bottom: 1px solid var(--line-on-navy);
+      overflow-wrap: anywhere;
+    }
+
+    .foot a:hover {
+      color: var(--sky);
+      border-bottom-color: var(--sky);
+    }
+
+    .foot-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    /* ---------------------------------------------------------- планшет */
+    @media (max-width: 940px) {
+      .calc {
+        grid-template-columns: 1fr;
+      }
+
+      .defs,
+      .facts {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---------------------------------------------------------- телефон */
+    @media (max-width: 720px) {
+
+      /* Шапка на 375 пикселях не вмещает знак, три языка и кнопку разом */
+      .bar-right .btn-sm {
+        display: none;
+      }
+
+      .stepper {
+        max-width: none;
+      }
+
+      .step {
+        grid-template-columns: 44px 1fr;
+        gap: 16px;
+        padding: 22px;
+      }
+    }
+
+    .float {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .float {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        position: fixed;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        z-index: var(--z-float);
+        background: var(--sky);
+        color: var(--navy);
+        text-decoration: none;
+        padding: 14px 20px;
+        border-radius: var(--r-pill);
+        font-size: 15px;
+        font-weight: 700;
+      }
+    }
+
+    /* ------------------------------------------------------------- заставка */
+    .boot {
+      display: none;
+    }
+
+    html.booting {
+      overflow: hidden;
+    }
+
+    html.booting .boot {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-boot);
+      align-items: center;
+      justify-content: center;
+      background: var(--navy);
+      opacity: 1;
+      transition: opacity .4s ease;
+    }
+
+    html.booting.boot-out .boot {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .boot-inner {
+      display: grid;
+      justify-items: center;
+      gap: 20px;
+    }
+
+    .boot-mark {
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--milk);
+    }
+
+    .boot-bar {
+      display: block;
+      width: 160px;
+      height: 1px;
+      background: var(--line-on-navy);
+    }
+
+    .boot-bar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--sky);
+      transition: width .25s ease;
+    }
+
+    /* Появление секций: только прозрачность. Прятать умеет ТОЛЬКО класс
+     .rise-armed, который вешает скрипт. Без JS текст просто виден */
+    .rise-armed {
+      opacity: 0;
+      transition: opacity .45s ease;
+    }
+
+    .rise-armed.rise-in {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .rise-armed {
+        opacity: 1;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <a class="skip" href="#top" data-i18n="skip">К содержанию</a>
+
+  <div class="boot" id="boot" aria-hidden="true">
+    <div class="boot-inner">
+      <span class="boot-mark">Qozhal</span>
+      <span class="boot-bar"><i></i></span>
+    </div>
+  </div>
+
+  <header class="on-navy">
+    <div class="wrap bar">
+      <a class="logo" href="#top">
+        <img src="mark.webp" alt="" width="36" height="36">
+        <b>Qozhal</b>
+      </a>
+      <div class="bar-right">
+        <nav class="langs" aria-label="Language">
+          <button type="button" data-lang="ru" lang="ru" aria-pressed="true">Рус</button>
+          <button type="button" data-lang="kk" lang="kk" aria-pressed="false">Қаз</button>
+          <button type="button" data-lang="en" lang="en" aria-pressed="false">Eng</button>
+        </nav>
+        <a class="btn btn-sm" href="#ask" data-i18n="ctaNav">Написать нам</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top" tabindex="-1">
+
+    <!-- ============================================================== герой -->
+    <div class="hero on-navy">
+      <div class="wrap">
+        <h1><span data-i18n="h1a">Наши AI-камеры присмотрят</span> <em data-i18n="h1b">за каждым вашим животным</em>
+        </h1>
+        <p class="lede" data-i18n="lede">Проведёте животное через проход один раз, дальше наши AI-камеры узнают его
+          сами. Вы будете видеть вес и привес каждого, а если кто-то начнёт хуже есть, узнаете об этом первым. Бирки,
+          ошейники и датчики не понадобятся.</p>
+        <div class="cta-row">
+          <a class="btn" href="#ask" data-i18n="ctaAsk">Рассказать про свою ферму</a>
+          <a class="btn btn-line" href="#how" data-i18n="ctaHow">Как это работает</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-light">
+
+      <!-- =============================================================== шаги -->
+      <section id="how">
+        <div class="wrap">
+          <div class="sec-head sec-head-mid rise">
+            <h2 data-i18n="howH">Три шага с вашей стороны, дальше система справляется сама</h2>
+          </div>
+          <div class="how-grid rise">
+            <div class="steps">
+              <div class="step">
+                <div class="step-n">01</div>
+                <div>
+                  <h3 data-i18n="s1h">Один раз через проход</h3>
+                  <p data-i18n="s1p">Полминуты на животное, и всё. AI-камеры сверху и сбоку запомнят его со всех сторон,
+                    больше от вас ничего не нужно.</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-n">02</div>
+                <div>
+                  <h3 data-i18n="s2h">Дальше система узнаёт его сама</h3>
+                  <p data-i18n="s2p">Днём и ночью, на любой AI-камере фермы. По масти, отметинам и силуэту, примерно так
+                    же, как узнаёте его вы.</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-n">03</div>
+                <div>
+                  <h3 data-i18n="s3h">А вы узнаёте первым</h3>
+                  <p data-i18n="s3p">Сообщение придёт на телефон сразу, с понятным объяснением и цифрами. Ничего
+                    открывать и проверять не нужно.</p>
+                </div>
+              </div>
+            </div><!-- /steps -->
+
+            <!--
+        Телефон рядом с шагами.
+
+        Рамка корпуса подставляется файлом phone.png, кадр внутри —
+        phone-cattle.jpg. Подпись распознавания нарисована разметкой, а не
+        взята с картинки: генератор пишет кириллицу с ошибками, а подпись
+        обязана быть в том же шрифте, что и вся страница.
+
+        Ни одного из двух файлов может не быть. Тогда остаётся
+        скруглённый тёмный прямоугольник с той же подписью — блок
+        выглядит целым, а не сломанным.
+      -->
+            <figure class="phone" aria-label="Как выглядит сообщение на телефоне">
+        <img class="phone-body" src="phone.png" alt="" />
+        <div class="phone-screen">
+          <img class="phone-shot" src="phone-cattle.jpg" alt="" />
+
+          <!-- Координаты сняты с phone-cattle.jpg, в процентах от кадра.
+               Заменили картинку — пересними и эти пять строк -->
+          <div class="track" aria-hidden="true">
+            <div class="box" style="left:17.6%;top:16.3%;width:21%;height:12.5%;animation-delay:.15s"><b>0512</b></div>
+            <div class="box" style="left:56.9%;top:20.9%;width:38.7%;height:12.2%;animation-delay:.3s"><b>0527</b></div>
+            <div class="box" style="left:7%;top:33.6%;width:33.4%;height:18.4%;animation-delay:.45s"><b>0541</b></div>
+            <div class="box" style="left:54.5%;top:41%;width:43.5%;height:16.5%;animation-delay:.6s"><b>0549</b></div>
+            <div class="box watch" style="left:34.6%;top:59.9%;width:42.8%;height:27.9%;animation-delay:.8s"><b>0533</b></div>
+          </div>
+
+          <div class="phone-tag"><b>0533</b> · активность ниже обычной</div>
+        </div>
+      </figure>
+          </div><!-- /how-grid -->
+        </div>
+      </section>
+
+      <!-- ============================================================ что даёт -->
+      <div class="sec-line" aria-hidden="true"></div>
+      <section>
+        <div class="wrap">
+          <div class="sec-head sec-head-mid rise">
+            <h2 data-i18n="featH">Шесть забот, которые мы снимем с вас</h2>
+          </div>
+          <div class="defs rise">
+            <div class="def">
+              <h3 data-i18n="f1h">Никаких бирок</h3>
+              <p data-i18n="f1p">На животное ничего вешать не нужно. AI-камера видит его так же, как видите вы, и, в
+                отличие от бирки, не теряется и не рвётся.</p>
+            </div>
+            <div class="def">
+              <h3 data-i18n="f2h">Вес без весовой</h3>
+              <p data-i18n="f2p">Вес и привес считаются при каждом проходе под AI-камерой. Вам сразу видно, кто
+                прибавляет, а кто стоит на месте.</p>
+            </div>
+            <div class="def">
+              <h3 data-i18n="f3h">Здоровье под присмотром</h3>
+              <p data-i18n="f3p">Система запоминает, как каждое животное ведёт себя обычно. Заметит перемену, скажет вам
+                сразу, пока всё ещё поправимо.</p>
+            </div>
+            <div class="def">
+              <h3 data-i18n="f4h">Вся ферма в телефоне</h3>
+              <p data-i18n="f4p">Живая картинка со всех AI-камер и карточка на каждое животное. Ферма всегда под рукой:
+                из дома, из машины, из города.</p>
+            </div>
+            <div class="def">
+              <h3 data-i18n="f5h">Охрана территории ночью</h3>
+              <p data-i18n="f5p">Если ночью на территории окажется чужой, вам придёт снимок. Камеры по периметру считаем
+                отдельно: их число зависит от длины забора, а не от стада.</p>
+            </div>
+            <div class="def">
+              <h3 data-i18n="f6h">Растёт вместе с фермой</h3>
+              <p data-i18n="f6p">От небольшого хозяйства до откормочника на тысячи голов. Захотите добавить AI-камеру,
+                она подключится сама, без нашего выезда.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== боль -->
+      <section class="on-navy">
+        <div class="wrap">
+          <div class="sec-head sec-head-mid rise">
+            <h2 data-i18n="painH">Три недели вы кормили её как обычно.<br>А потом стало поздно</h2>
+            <p class="sub" data-i18n="painSub">Животное теряет аппетит за несколько дней до того, как это станет заметно
+              со стороны. При обходе такое не увидеть, а в тетради не с чем сравнить. И эти дни стоят вам и корма, и
+              привеса.</p>
+          </div>
+          <div class="facts rise">
+            <div><b class="num" data-i18n="pain1n">2–3 дня</b>
+              <p data-i18n="pain1">животное уже недоедает, а со стороны всё выглядит обычно</p>
+            </div>
+            <div><b class="num" data-i18n="pain2n">каждый день</b>
+              <p data-i18n="pain2">уходит на обход стада, и всё равно видно не всё</p>
+            </div>
+            <div><b class="num" data-i18n="pain3n">в тетради</b>
+              <p data-i18n="pain3">записи, которые потом не с чем сравнить</p>
+            </div>
+            <div><b class="num" data-i18n="pain4n">раз в месяц</b>
+              <p data-i18n="pain4">взвешивание, если оно вообще доходит до весов</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== анкета -->
+      <div class="sec-line" aria-hidden="true"></div>
+      <section id="ask">
+        <div class="wrap">
+          <div class="sec-head sec-head-mid rise">
+            <h2 data-i18n="askH">Расскажите про свою ферму</h2>
+            <p class="sub" data-i18n="askSub">Пять вопросов, и всё. Ответы придут нам в WhatsApp одним сообщением,
+              печатать ничего не придётся, а цену назовём уже по вашим цифрам.</p>
+          </div>
+
+          <div class="calc rise">
+            <div class="calc-in">
+
+              <!-- Сводка недостающего. Пустая и скрытая, пока не нажали
+               «Отправить»: ругаться на человека до того, как он что-то
+               сделал, — самый быстрый способ его прогнать -->
+              <div class="summary" id="summary" hidden tabindex="-1">
+                <h3 data-i18n="errTitle">Остались вопросы без ответа</h3>
+                <ul id="summary-list"></ul>
+              </div>
+
+              <!-- 1 ---------------------------------------------------------- -->
+              <div class="field" id="f-head">
+                <label for="q-head"><span data-i18n="qHead">Сколько голов КРС у вас сейчас</span><span class="req"
+                    aria-hidden="true">*</span></label>
+                <p class="hint" id="h-head" data-i18n="qHeadHint">Всё поголовье на сегодня</p>
+                <div class="stepper">
+                  <button type="button" class="js-step" data-target="q-head" data-delta="-50"
+                    aria-label="Убавить на 50">−</button>
+                  <input id="q-head" class="js-num" type="number" inputmode="numeric" required min="1" max="20000"
+                    step="50" placeholder="0" aria-describedby="h-head e-head" autocomplete="off">
+                  <button type="button" class="js-step" data-target="q-head" data-delta="50"
+                    aria-label="Прибавить 50">+</button>
+                </div>
+                <p class="err" id="e-head" hidden data-i18n="eEmpty">Здесь пока пусто</p>
+              </div>
+
+              <!-- 2 ---------------------------------------------------------- -->
+              <div class="field" id="f-feedlot">
+                <span class="lbl" id="l-feedlot"><span data-i18n="qFeedlot">Есть откормочная площадка?</span><span
+                    class="req" aria-hidden="true">*</span></span>
+                <p class="hint" data-i18n="qFeedlotHint">На откорме животные идут через проход плотнее, поэтому вам
+                  понадобится меньше проходов</p>
+                <div class="choice" role="group" aria-labelledby="l-feedlot">
+                  <button type="button" class="js-pick" data-key="feedlot" data-val="1" aria-pressed="false"
+                    data-i18n="aYes">Да</button>
+                  <button type="button" class="js-pick" data-key="feedlot" data-val="0" aria-pressed="false"
+                    data-i18n="aNo">Нет</button>
+                </div>
+                <div class="sub-field" id="s-feedlot" hidden>
+                  <label for="q-feedhead"><span data-i18n="qFeedHead">На сколько голов она рассчитана</span><span
+                      class="req" aria-hidden="true">*</span></label>
+                  <div class="stepper">
+                    <button type="button" class="js-step" data-target="q-feedhead" data-delta="-50"
+                      aria-label="Убавить на 50">−</button>
+                    <input id="q-feedhead" class="js-num" type="number" inputmode="numeric" min="1" max="20000"
+                      step="50" placeholder="0" aria-describedby="e-feedlot" autocomplete="off">
+                    <button type="button" class="js-step" data-target="q-feedhead" data-delta="50"
+                      aria-label="Прибавить 50">+</button>
+                  </div>
+                </div>
+                <p class="err" id="e-feedlot" hidden data-i18n="eEmpty">Здесь пока пусто</p>
+              </div>
+
+              <!-- 3 ---------------------------------------------------------- -->
+              <div class="field" id="f-area">
+                <label for="q-area"><span data-i18n="qArea">Площадь хозяйства, гектаров</span><span class="req"
+                    aria-hidden="true">*</span></label>
+                <p class="hint" id="h-area" data-i18n="qAreaHint">Вся территория. Точно знать не обязательно, примерного
+                  числа хватит</p>
+                <div class="stepper">
+                  <button type="button" class="js-step" data-target="q-area" data-delta="-1"
+                    aria-label="Убавить на 1">−</button>
+                  <input id="q-area" class="js-num" type="number" inputmode="decimal" required min="0.1" max="10000"
+                    step="0.5" placeholder="0" aria-describedby="h-area e-area" autocomplete="off">
+                  <button type="button" class="js-step" data-target="q-area" data-delta="1"
+                    aria-label="Прибавить 1">+</button>
+                </div>
+                <p class="err" id="e-area" hidden data-i18n="eEmpty">Здесь пока пусто</p>
+              </div>
+
+              <!-- 4 ---------------------------------------------------------- -->
+              <div class="field" id="f-pens">
+                <span class="lbl" id="l-pens"><span data-i18n="qPens">Есть загоны или клетки?</span><span class="req"
+                    aria-hidden="true">*</span></span>
+                <p class="hint" data-i18n="qPensHint">Огороженные места, где животные стоят группами</p>
+                <div class="choice" role="group" aria-labelledby="l-pens">
+                  <button type="button" class="js-pick" data-key="pens" data-val="1" aria-pressed="false"
+                    data-i18n="aYes">Да</button>
+                  <button type="button" class="js-pick" data-key="pens" data-val="0" aria-pressed="false"
+                    data-i18n="aNo">Нет</button>
+                </div>
+                <div class="sub-field" id="s-pens" hidden>
+                  <label for="q-penscount"><span data-i18n="qPensCount">Сколько их</span><span class="req"
+                      aria-hidden="true">*</span></label>
+                  <div class="stepper">
+                    <button type="button" class="js-step" data-target="q-penscount" data-delta="-1"
+                      aria-label="Убавить на 1">−</button>
+                    <input id="q-penscount" class="js-num" type="number" inputmode="numeric" min="1" max="500" step="1"
+                      placeholder="0" aria-describedby="e-pens" autocomplete="off">
+                    <button type="button" class="js-step" data-target="q-penscount" data-delta="1"
+                      aria-label="Прибавить 1">+</button>
+                  </div>
+                  <label for="q-penssize" style="margin-top:16px"><span data-i18n="qPensSize">Примерный размер одного,
+                      метров</span><span class="req" aria-hidden="true">*</span></label>
+                  <input id="q-penssize" class="text-in js-text" type="text" placeholder="15 на 12"
+                    aria-describedby="e-pens" autocomplete="off">
+                </div>
+                <p class="err" id="e-pens" hidden data-i18n="eEmpty">Здесь пока пусто</p>
+              </div>
+
+              <!-- 5 ---------------------------------------------------------- -->
+              <div class="field" id="f-guard">
+                <span class="lbl" id="l-guard"><span data-i18n="qGuard">Нужна охрана территории?</span><span class="req"
+                    aria-hidden="true">*</span></span>
+                <p class="hint" data-i18n="qGuardHint">Те же AI-камеры ночью смотрят за периметром и пришлют вам снимок,
+                  если появится чужой</p>
+                <div class="choice" role="group" aria-labelledby="l-guard">
+                  <button type="button" class="js-pick" data-key="guard" data-val="1" aria-pressed="false"
+                    data-i18n="aYes">Да</button>
+                  <button type="button" class="js-pick" data-key="guard" data-val="0" aria-pressed="false"
+                    data-i18n="aNo">Нет</button>
+                </div>
+                <p class="err" id="e-guard" hidden data-i18n="eEmpty">Здесь пока пусто</p>
+              </div>
+
+            </div>
+
+            <div class="calc-out">
+              <p class="out-title" data-i18n="outTitle">Предварительно получается</p>
+
+              <dl class="out-list">
+                <div class="out-row">
+                  <dt data-i18n="rRace">Проходов</dt>
+                  <dd class="num" id="r-race">—</dd>
+                </div>
+                <div class="out-row">
+                  <dt data-i18n="rCamRace">AI-камер на проходы</dt>
+                  <dd class="num" id="r-camrace">—</dd>
+                </div>
+                <div class="out-row">
+                  <dt data-i18n="rCamPens">AI-камер на загоны</dt>
+                  <dd class="num" id="r-campens">—</dd>
+                </div>
+                <div class="out-row">
+                  <dt data-i18n="rCamGuard">AI-камер на охрану</dt>
+                  <dd class="num" id="r-camguard">—</dd>
+                </div>
+                <div class="out-row out-total">
+                  <dt data-i18n="rCams">AI-камер всего</dt>
+                  <dd class="num" id="r-cams">—</dd>
+                </div>
+                <div class="out-row">
+                  <dt data-i18n="rPc">Компьютеров</dt>
+                  <dd class="num" id="r-pc">—</dd>
+                </div>
+              </dl>
+
+              <p class="out-why" data-i18n="rWhy">Камеры на проходах дают вес и узнают животное. Камеры над загонами
+                видят, кто сколько прошёл и сколько времени провёл у корма: без них не будет тревог по здоровью.</p>
+
+              <p class="out-note" id="r-note" data-i18n="noteStart">Как ответите на вопросы слева, здесь появится,
+                сколько камер понадобится вашей ферме.</p>
+
+              <div class="out-cta">
+                <a class="btn btn-wide js-send" href="#" target="_blank" rel="noopener" data-i18n="ctaSend">Отправить в
+                  WhatsApp</a>
+              </div>
+              <p class="out-small" data-i18n="outSmall">Точное число камер подберём вместе, когда посмотрим вашу ферму.
+              </p>
+
+              <p class="sr-only" id="r-status" role="status"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== финал -->
+      <section class="on-navy">
+        <div class="wrap rise">
+          <h2 data-i18n="endH">Расскажите про свою ферму, и мы подберём то, что нужно именно вам</h2>
+          <p class="sub" data-i18n="endSub">Сколько голов, сколько проходов, какие камеры уже стоят. Соберём комплект
+            под вашу ферму и назовём цену. Разговор ни к чему не обязывает.</p>
+          <div class="cta-row">
+            <a class="btn js-wa" href="#" target="_blank" rel="noopener" data-i18n="ctaMain">Написать в WhatsApp</a>
+          </div>
+        </div>
+      </section>
+    </div><!-- /sheet-light -->
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span>© <span id="year">2026</span> Qozhal · <span data-i18n="footNote">Астана, Казахстан</span></span>
+      <span class="foot-links">
+        <a class="js-wa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="js-tel" href="#">+7 700 000 00 00</a>
+        <a class="js-mail" href="#">qozhaltracker@gmail.com</a>
+      </span>
+    </div>
+  </footer>
+
+  <a class="float js-wa" href="#" target="_blank" rel="noopener" data-i18n="floatCta">WhatsApp</a>
+
+  <script>
+    /* ==========================================================================
+       ВАШИ КОНТАКТЫ — правится здесь, и больше нигде
+       ==========================================================================
+       phone: только цифры, с кодом страны, без плюса и пробелов.
+       ========================================================================== */
+    const CONTACT = {
+      phone: "77000000000",              //  ← ЗАМЕНИТЬ на свой номер
+      phonePretty: "+7 700 000 00 00",
+      email: "qozhaltracker@gmail.com",
+    };
+
+    /* ---------------------------------------------------------------- переводы */
+    const T = {
+      ru: {
+        _htmlLang: "ru",
+        _title: "Qozhal — AI-камеры присмотрят за каждым вашим животным",
+        _wa: "Здравствуйте! Интересует Qozhal для моей фермы. Расскажите, пожалуйста, подробнее.",
+        waIntro: "Здравствуйте! Заполнил анкету на сайте Qozhal.",
+        waHead: "Голов КРС",
+        waFeedlot: "Откормплощадка",
+        waFeedHead: "на голов",
+        waArea: "Площадь, га",
+        waPens: "Загоны",
+        waPensCount: "загонов",
+        waPensSize: "размер",
+        waGuard: "Охрана территории",
+        waYes: "есть",
+        waNo: "нет",
+        waNeed: "нужна",
+        waSkip: "не нужна",
+        waOut: "Предварительно вышло: проходов {race}, камер на проходы {cr}, на загоны {cp}, на охрану {cg}, всего камер {cams}, компьютеров {pc}.",
+        waAsk: "Расскажите, пожалуйста, что получается по стоимости.",
+        skip: "К содержанию",
+        ctaNav: "Написать нам",
+        ctaMain: "Написать в WhatsApp",
+        ctaAsk: "Рассказать про свою ферму",
+        ctaHow: "Как это работает",
+        floatCta: "WhatsApp",
+        h1a: "Наши AI-камеры присмотрят",
+        h1b: "за каждым вашим животным",
+        lede: "Проведёте животное через проход один раз, дальше наши AI-камеры узнают его сами. Вы будете видеть вес и привес каждого, а если кто-то начнёт хуже есть, узнаете об этом первым. Бирки, ошейники и датчики не понадобятся.",
+        howH: "Три шага с вашей стороны, дальше система справляется сама",
+        s1h: "Один раз через проход",
+        s1p: "Полминуты на животное, и всё. AI-камеры сверху и сбоку запомнят его со всех сторон, больше от вас ничего не нужно.",
+        s2h: "Дальше система узнаёт его сама",
+        s2p: "Днём и ночью, на любой AI-камере фермы. По масти, отметинам и силуэту, примерно так же, как узнаёте его вы.",
+        s3h: "А вы узнаёте первым",
+        s3p: "Сообщение придёт на телефон сразу, с понятным объяснением и цифрами. Ничего открывать и проверять не нужно.",
+        featH: "Шесть забот, которые мы снимем с вас",
+        f1h: "Никаких бирок",
+        f1p: "На животное ничего вешать не нужно. AI-камера видит его так же, как видите вы, и, в отличие от бирки, не теряется и не рвётся.",
+        f2h: "Вес без весовой",
+        f2p: "Вес и привес считаются при каждом проходе под AI-камерой. Вам сразу видно, кто прибавляет, а кто стоит на месте.",
+        f3h: "Здоровье под присмотром",
+        f3p: "Система запоминает, как каждое животное ведёт себя обычно. Заметит перемену, скажет вам сразу, пока всё ещё поправимо.",
+        f4h: "Вся ферма в телефоне",
+        f4p: "Живая картинка со всех AI-камер и карточка на каждое животное. Ферма всегда под рукой: из дома, из машины, из города.",
+        f5h: "Охрана территории ночью",
+        f5p: "Если ночью на территории окажется чужой, вам придёт снимок. Камеры по периметру считаем отдельно: их число зависит от длины забора, а не от стада.",
+        f6h: "Растёт вместе с фермой",
+        f6p: "От небольшого хозяйства до откормочника на тысячи голов. Захотите добавить AI-камеру, она подключится сама, без нашего выезда.",
+        painH: "Три недели вы кормили её как обычно.<br>А потом стало поздно",
+        painSub: "Животное теряет аппетит за несколько дней до того, как это станет заметно со стороны. При обходе такое не увидеть, а в тетради не с чем сравнить. И эти дни стоят вам и корма, и привеса.",
+        pain1n: "2–3 дня",
+        pain1: "животное уже недоедает, а со стороны всё выглядит обычно",
+        pain2n: "каждый день",
+        pain2: "уходит на обход стада, и всё равно видно не всё",
+        pain3n: "в тетради",
+        pain3: "записи, которые потом не с чем сравнить",
+        pain4n: "раз в месяц",
+        pain4: "взвешивание, если оно вообще доходит до весов",
+        askH: "Расскажите про свою ферму",
+        askSub: "Пять вопросов, и всё. Ответы придут нам в WhatsApp одним сообщением, печатать ничего не придётся, а цену назовём уже по вашим цифрам.",
+        qHead: "Сколько голов КРС у вас сейчас",
+        qHeadHint: "Всё поголовье на сегодня",
+        qFeedlot: "Есть откормочная площадка?",
+        qFeedlotHint: "На откорме животные идут через проход плотнее, поэтому вам понадобится меньше проходов",
+        qFeedHead: "На сколько голов она рассчитана",
+        qArea: "Площадь хозяйства, гектаров",
+        qAreaHint: "Вся территория. Точно знать не обязательно, примерного числа хватит",
+        qPens: "Есть загоны или клетки?",
+        qPensHint: "Огороженные места, где животные стоят группами",
+        qPensCount: "Сколько их",
+        qPensSize: "Примерный размер одного, метров",
+        qGuard: "Нужна охрана территории?",
+        qGuardHint: "Те же AI-камеры ночью смотрят за периметром и пришлют вам снимок, если появится чужой",
+        aYes: "Да",
+        aNo: "Нет",
+        errTitle: "Остались вопросы без ответа",
+        eEmpty: "Здесь пока пусто",
+        eHead: "Сколько у вас голов",
+        eFeedlot: "Есть ли откормочная площадка",
+        eFeedHead: "На сколько голов площадка",
+        eArea: "Площадь хозяйства",
+        ePens: "Есть ли загоны или клетки",
+        ePensCount: "Сколько загонов",
+        ePensSize: "Примерный размер загона",
+        ePensRead: "Размер загона, например «15 на 12»",
+        eGuard: "Нужна ли охрана территории",
+        outTitle: "Предварительно получается",
+        rRace: "Проходов",
+        rCamRace: "AI-камер на проходы",
+        rCamPens: "AI-камер на загоны",
+        rCamGuard: "AI-камер на охрану",
+        rCams: "AI-камер всего",
+        rPc: "Компьютеров",
+        rWhy: "Камеры на проходах дают вес и узнают животное. Камеры над загонами видят, кто сколько прошёл и сколько времени провёл у корма: без них не будет тревог по здоровью.",
+        ctaSend: "Отправить в WhatsApp",
+        outSmall: "Точное число камер подберём вместе, когда посмотрим вашу ферму.",
+        noteStart: "Как ответите на вопросы слева, здесь появится, сколько камер понадобится вашей ферме.",
+        noteOk: "По вашим цифрам этого хватит, чтобы взвешивать и узнавать каждое животное. Остальное обсудим в переписке.",
+        noteSmall: "Для небольшого хозяйства начинаем с короткого пилота на один проход. Так вы увидите систему в работе, прежде чем решать про остальное.",
+        noteBig: "Стадо больше тысячи голов считаем отдельно: там и проходов больше, и условия другие. Обсудим в переписке.",
+        endH: "Расскажите про свою ферму, и мы подберём то, что нужно именно вам",
+        endSub: "Сколько голов, сколько проходов, какие камеры уже стоят. Соберём комплект под вашу ферму и назовём цену. Разговор ни к чему не обязывает.",
+        footNote: "Астана, Казахстан",
+      },
+
+      kk: {
+        _htmlLang: "kk",
+        _title: "Qozhal — AI-камералар әр малыңызды бағып отырады",
+        _wa: "Сәлеметсіз бе! Фермама Qozhal қажет еді. Толығырақ айтып бересіз бе?",
+        waIntro: "Сәлеметсіз бе! Qozhal сайтында сауалнаманы толтырдым.",
+        waHead: "ІҚМ басы",
+        waFeedlot: "Бордақылау алаңы",
+        waFeedHead: "басқа",
+        waArea: "Аудан, га",
+        waPens: "Қоралар",
+        waPensCount: "қора",
+        waPensSize: "өлшемі",
+        waGuard: "Аумақ күзеті",
+        waYes: "бар",
+        waNo: "жоқ",
+        waNeed: "керек",
+        waSkip: "керек емес",
+        waOut: "Алдын ала шыққаны: өткел {race}, өткелге {cr} камера, қораға {cp}, күзетке {cg}, барлығы {cams} камера, компьютер {pc}.",
+        waAsk: "Құны бойынша не шығатынын айтып бересіз бе?",
+        skip: "Мазмұнға өту",
+        ctaNav: "Бізге жазу",
+        ctaMain: "WhatsApp-қа жазу",
+        ctaAsk: "Фермам туралы айту",
+        ctaHow: "Қалай жұмыс істейді",
+        floatCta: "WhatsApp",
+        h1a: "AI-камераларымыз әр малыңызды",
+        h1b: "бағып отырады",
+        lede: "Малды өткелден бір рет өткізесіз, әрі қарай AI-камераларымыз оны өздері таниды. Әрқайсысының салмағы мен қосымша салмағын көріп отырасыз, ал біреуі нашар жей бастаса, бірінші болып білесіз. Бирка, өрім және датчик қажет емес.",
+        howH: "Сізден үш қадам, әрі қарай жүйе өзі істейді",
+        s1h: "Өткелден бір рет",
+        s1p: "Бір малға жарты минут, болды. Үстіндегі және бүйіріндегі AI-камералар оны жан-жағынан есте сақтайды, сізден басқа ештеңе керек емес.",
+        s2h: "Әрі қарай жүйе оны өзі таниды",
+        s2p: "Күндіз де, түнде де, ферманың кез келген AI-камерасынан. Түсі, таңбалары мен сұлбасы бойынша, шамамен өзіңіз танығандай.",
+        s3h: "Ал сіз бірінші болып білесіз",
+        s3p: "Хабарлама телефонға бірден келеді, түсінікті түсіндірмесімен және сандарымен. Ештеңе ашып, тексерудің қажеті жоқ.",
+        featH: "Сізден алатын алты міндет",
+        f1h: "Ешқандай бирка жоқ",
+        f1p: "Малға ештеңе ілудің қажеті жоқ. AI-камера оны өзіңіз көргендей көреді және биркадан айырмашылығы жоғалмайды, үзілмейді.",
+        f2h: "Таразысыз салмақ",
+        f2p: "AI-камера астынан әр өткенде салмақ пен қосымша салмақ есептеледі. Кім қосып жатыр, кім орнында тұр, сізге бірден көрінеді.",
+        f3h: "Денсаулық бақылауда",
+        f3p: "Жүйе әр малдың әдетте қалай жүретінін есте сақтайды. Өзгерісті байқаса, бәрі әлі түзетілетін кезде бірден айтады.",
+        f4h: "Бүкіл ферма телефонда",
+        f4p: "Барлық AI-камерадан тірі сурет және әр малға карточка. Ферма әрқашан қол астында: үйден де, көліктен де, қаладан да.",
+        f5h: "Түнде аумақты күзету",
+        f5p: "Түнде аумақта бөгде адам болса, сізге сурет келеді. Периметрдегі камераларды бөлек санаймыз: олардың саны малға емес, қоршау ұзындығына байланысты.",
+        f6h: "Фермамен бірге өседі",
+        f6p: "Шағын шаруашылықтан мыңдаған бастық бордақылауға дейін. AI-камера қосқыңыз келсе, ол өзі қосылады, біздің шығуымызсыз.",
+        painH: "Үш апта бойы оны әдеттегідей жемдедіңіз.<br>Ал кейін кеш болды",
+        painSub: "Мал сырттан байқалардан бірнеше күн бұрын жем жеуін азайтады. Табынды аралағанда мұны көру мүмкін емес, дәптерден салыстыратын да ештеңе жоқ. Ал сол күндер сізге жемге де, қосымша салмаққа да түседі.",
+        pain1n: "2–3 күн",
+        pain1: "мал аз жеп жүреді, ал сырттан бәрі әдеттегідей көрінеді",
+        pain2n: "күн сайын",
+        pain2: "табынды аралауға кетеді, бәрібір бәрін көру мүмкін емес",
+        pain3n: "дәптерде",
+        pain3: "кейін салыстыруға келмейтін жазбалар",
+        pain4n: "айына бір рет",
+        pain4: "өлшеу, егер мал таразыға дейін жетсе",
+        askH: "Фермаңыз туралы айтыңыз",
+        askSub: "Бес сұрақ, болды. Жауаптар бізге WhatsApp-қа бір хабарламамен келеді, ештеңе теруге тура келмейді, ал бағаны сіздің сандарыңыз бойынша айтамыз.",
+        qHead: "Қазір қанша бас ІҚМ бар",
+        qHeadHint: "Бүгінгі бүкіл мал басы",
+        qFeedlot: "Бордақылау алаңы бар ма?",
+        qFeedlotHint: "Бордақыда мал өткелден тығызырақ өтеді, сондықтан сізге өткел азырақ керек болады",
+        qFeedHead: "Ол қанша басқа есептелген",
+        qArea: "Шаруашылық ауданы, гектар",
+        qAreaHint: "Бүкіл аумақ. Дәл білу міндетті емес, шамамен алынған сан жеткілікті",
+        qPens: "Қора немесе торлар бар ма?",
+        qPensHint: "Мал топ-топ болып тұратын қоршалған орындар",
+        qPensCount: "Қаншау",
+        qPensSize: "Біреуінің шамамен өлшемі, метр",
+        qGuard: "Аумақ күзеті керек пе?",
+        qGuardHint: "Сол AI-камералар түнде периметрді бақылап, бөгде адам пайда болса, сізге сурет жібереді",
+        aYes: "Иә",
+        aNo: "Жоқ",
+        errTitle: "Жауапсыз сұрақтар қалды",
+        eEmpty: "Мұнда әзірге бос",
+        eHead: "Қанша бас малыңыз бар",
+        eFeedlot: "Бордақылау алаңы бар ма",
+        eFeedHead: "Алаң қанша басқа",
+        eArea: "Шаруашылық ауданы",
+        ePens: "Қора немесе тор бар ма",
+        ePensCount: "Қанша қора",
+        ePensSize: "Қораның шамамен өлшемі",
+        ePensRead: "Қора өлшемі, мысалы «15-ке 12»",
+        eGuard: "Аумақ күзеті керек пе",
+        outTitle: "Алдын ала былай шығады",
+        rRace: "Өткел",
+        rCamRace: "Өткелдегі AI-камера",
+        rCamPens: "Қорадағы AI-камера",
+        rCamGuard: "Күзеттегі AI-камера",
+        rCams: "Барлық AI-камера",
+        rPc: "Компьютер",
+        rWhy: "Өткелдегі камералар салмақты өлшеп, малды таниды. Қора үстіндегі камералар қайсысы қанша жүргенін және жем басында қанша тұрғанын көреді: онсыз денсаулық бойынша ескерту болмайды.",
+        ctaSend: "WhatsApp-қа жіберу",
+        outSmall: "Камералардың нақты санын фермаңызды көргенде бірге таңдаймыз.",
+        noteStart: "Сол жақтағы сұрақтарға жауап бергеніңізде, фермаңызға қанша камера керегі осында шығады.",
+        noteOk: "Сіздің сандарыңыз бойынша әр малды өлшеп, тануға осы жеткілікті. Қалғанын хат алмасуда талқылаймыз.",
+        noteSmall: "Шағын шаруашылық үшін бір өткелге қысқа пилоттан бастаймыз. Қалғаны туралы шешім қабылдамас бұрын жүйені жұмыс үстінде көресіз.",
+        noteBig: "Мың бастан асатын табынды бөлек есептейміз: онда өткел де көп, шарттар да басқа. Хат алмасуда талқылаймыз.",
+        endH: "Фермаңыз туралы айтыңыз, сізге дәл қажеттісін таңдап береміз",
+        endSub: "Неше бас, неше өткел, қандай камералар бар. Фермаңызға жинақ құрып, бағасын айтамыз. Әңгіме ешнәрсеге міндеттемейді.",
+        footNote: "Астана, Қазақстан",
+      },
+
+      en: {
+        _htmlLang: "en",
+        _title: "Qozhal — AI cameras keep an eye on every animal of yours",
+        _wa: "Hello! I'm interested in Qozhal for my farm. Could you tell me more?",
+        waIntro: "Hello! I filled in the form on the Qozhal site.",
+        waHead: "Cattle",
+        waFeedlot: "Feedlot",
+        waFeedHead: "for head",
+        waArea: "Area, ha",
+        waPens: "Pens",
+        waPensCount: "count",
+        waPensSize: "size",
+        waGuard: "Perimeter security",
+        waYes: "yes",
+        waNo: "no",
+        waNeed: "needed",
+        waSkip: "not needed",
+        waOut: "Roughly: races {race}, cameras on races {cr}, on pens {cp}, on perimeter {cg}, cameras in total {cams}, computers {pc}.",
+        waAsk: "Could you tell me what that works out to?",
+        skip: "Skip to content",
+        ctaNav: "Message us",
+        ctaMain: "Message on WhatsApp",
+        ctaAsk: "Tell us about your farm",
+        ctaHow: "How it works",
+        floatCta: "WhatsApp",
+        h1a: "Our AI cameras keep an eye",
+        h1b: "on every animal of yours",
+        lede: "Walk each animal through the race once and our AI cameras take it from there. You will see the weight and daily gain of every animal, and if one starts eating less you hear about it first. No ear tags, no collars, no sensors.",
+        howH: "Three steps from you, then the system carries on by itself",
+        s1h: "Once through the race",
+        s1p: "Half a minute per animal and that is it. AI cameras above and beside the race learn it from every side, and nothing more is needed from you.",
+        s2h: "From then on it recognises the animal itself",
+        s2p: "Day and night, on any AI camera on the farm. By coat, markings and silhouette, much the way you recognise it yourself.",
+        s3h: "And you are the first to know",
+        s3p: "The message reaches your phone right away, with a plain explanation and the numbers behind it. Nothing to open, nothing to check.",
+        featH: "Six things we take off your hands",
+        f1h: "No ear tags at all",
+        f1p: "Nothing goes on the animal. The AI camera sees it the way you do and, unlike a tag, it never falls off or tears.",
+        f2h: "Weight without a weighbridge",
+        f2p: "Weight and daily gain are worked out on every pass under the AI camera. You see at a glance who is putting on and who is standing still.",
+        f3h: "Health kept an eye on",
+        f3p: "The system learns how each animal usually behaves. When something changes, you hear about it straight away, while it can still be put right.",
+        f4h: "The whole farm in your pocket",
+        f4p: "Live view from every AI camera and a card for every animal. Your farm is always at hand: from home, from the car, from town.",
+        f5h: "The property watched at night",
+        f5p: "If a stranger turns up on the property at night, a still lands on your phone. Perimeter cameras are counted separately: their number follows the length of the fence, not the size of the herd.",
+        f6h: "Grows with the farm",
+        f6p: "From a smallholding to a feedlot of thousands. Add an AI camera whenever you like and it connects itself, with no visit from us.",
+        painH: "For three weeks you fed her as always.<br>By then it was too late",
+        painSub: "An animal goes off its feed several days before anyone can see it from the outside. A walk round the herd will not show it, and a notebook gives you nothing to compare against. Those days cost you both feed and gain.",
+        pain1n: "2–3 days",
+        pain1: "the animal is already eating less while everything still looks normal",
+        pain2n: "every day",
+        pain2: "spent walking the herd, and you still can't see everything",
+        pain3n: "in a notebook",
+        pain3: "notes you can never compare to each other later",
+        pain4n: "once a month",
+        pain4: "a weighing, if the animals reach the scales at all",
+        askH: "Tell us about your farm",
+        askSub: "Five questions and you are done. Your answers reach us on WhatsApp as one message, there is nothing to type out, and we price it from your own numbers.",
+        qHead: "How many cattle do you have now",
+        qHeadHint: "The whole herd as of today",
+        qFeedlot: "Do you have a feedlot?",
+        qFeedlotHint: "Feedlot cattle pass through more densely, so you will need fewer races",
+        qFeedHead: "How many head is it built for",
+        qArea: "Farm area, hectares",
+        qAreaHint: "The whole property. No need for an exact figure, a rough one is plenty",
+        qPens: "Are there pens or crates?",
+        qPensHint: "Fenced areas where animals stand in groups",
+        qPensCount: "How many",
+        qPensSize: "Rough size of one, metres",
+        qGuard: "Do you need perimeter security?",
+        qGuardHint: "The same AI cameras watch the perimeter at night and send you a still if a stranger shows up",
+        aYes: "Yes",
+        aNo: "No",
+        errTitle: "A few questions are still unanswered",
+        eEmpty: "Still empty here",
+        eHead: "How many head you have",
+        eFeedlot: "Whether there is a feedlot",
+        eFeedHead: "How many head the feedlot holds",
+        eArea: "The farm area",
+        ePens: "Whether there are pens",
+        ePensCount: "How many pens",
+        ePensSize: "The rough pen size",
+        ePensRead: "The pen size, for example \"15 by 12\"",
+        eGuard: "Whether you need perimeter security",
+        outTitle: "Roughly this",
+        rRace: "Races",
+        rCamRace: "AI cameras on races",
+        rCamPens: "AI cameras on pens",
+        rCamGuard: "AI cameras on perimeter",
+        rCams: "AI cameras in total",
+        rPc: "Computers",
+        rWhy: "Cameras on the race weigh the animal and recognise it. Cameras above the pens see how far each animal walked and how long it spent at the feeder: without them there are no health alerts.",
+        ctaSend: "Send this on WhatsApp",
+        outSmall: "We will settle the exact camera count together, once we have seen your farm.",
+        noteStart: "Once you have answered the questions on the left, your camera count appears here.",
+        noteOk: "On your figures this is enough to weigh and recognise every animal. The rest we will go through with you.",
+        noteSmall: "For a small farm we start with a short pilot on one race. You get to see the system working before deciding about the rest.",
+        noteBig: "A herd over a thousand head we price separately: more races, different terms. We will go through it with you.",
+        endH: "Tell us about your farm and we will put together what suits you",
+        endSub: "How many head, how many races, what cameras you already have. We'll put a kit together and give you a price. No obligation.",
+        footNote: "Astana, Kazakhstan",
+      },
+    };
+
+    /* ==========================================================================
+       АНКЕТА
+       ==========================================================================
+       Пять вопросов, все обязательные. Ответы уходят одним сообщением в
+       WhatsApp — человеку не надо ничего печатать, менеджеру не надо
+       переспрашивать.
+    
+       ЦЕН ЗДЕСЬ НЕТ И НЕ ДОЛЖНО БЫТЬ. Показывается только состав комплекта.
+       Сумма, вырванная из разговора, отпугивает: она всегда выглядит либо
+       дорого — человек ещё не понял, за что, — либо подозрительно дёшево.
+    
+       ПРОХОДЫ. Формула из prodazhi/KAK_SCHITAT_KLIENTU.md, того же файла, по
+       которому считает менеджер. Камеры считаются не по головам, а по
+       местам: стадо в пятьсот голов через один раскол требует столько же
+       камер, сколько стадо в пятьдесят. Поголовье влияет только на ЧИСЛО
+       проходов — 400 голов на проход в обычном стаде, 600 на откорме, где
+       прогон плотнее.
+    
+       КАМЕРЫ. Две на проход, и это не запас. Сверху берётся вес и промеры —
+       единственное место, где силуэт не зависит от поворота животного.
+       Сбоку берётся узнавание: все приметы на боку.
+    
+       ЗАГОНЫ. Одна камера берёт около 330 м² загона. Ограничивает не
+       разрешение, а угол зрения на дальней границе: ниже 20° к земле
+       животные начинают закрывать друг друга, и трек рассыпается. При
+       мачте 6 метров это 16 метров вдаль и 41 в ширину.
+    
+       Без камер над загонами не работает половина того, что обещано на
+       этой же странице: «сколько прошло», «сколько времени у корма»,
+       «стало меньше есть или двигаться». Проход даёт вес и узнавание, и
+       только их. Поэтому обзор загонов считается на экране, а не
+       откладывается до разговора.
+    
+       ОХРАНА считается по периметру, а не по площади: камеры ставят вдоль
+       забора. Сторона квадрата равной площади, четыре стороны, 150 метров
+       на камеру. Меньше четырёх не бывает — угол без камеры это не охрана.
+       ========================================================================== */
+    const HEAD_PER_RACE = 400;   // голов на проход в обычном стаде
+    const FEED_PER_RACE = 600;   // на откорме прогон плотнее
+    const CAMS_PER_RACE = 2;     // сверху вес и промеры, сбоку узнавание
+    const M2_PER_PEN_CAM = 330;  // мачта 6 м, дальняя граница под 20° к земле
+    const M_PER_GUARD_CAM = 150; // метров забора на камеру
+    const MIN_GUARD_CAMS = 4;    // четыре угла
+    const CAMS_PER_PC = 4;     // ядер четыре, камера съедает почти ядро
+    const SMALL_FARM = 200;   // ниже начинаем с короткого пилота
+    const BIG_HERD = 1000;  // выше считаем отдельно
+
+    /* null — «ещё не ответили». Отличать это от нуля обязательно: ноль
+       загонов и «про загоны не спросили» — разные вещи, и вторая должна
+       останавливать отправку */
+    const state = {
+      head: null,
+      feedlot: null, feedHead: null,
+      area: null,
+      pens: null, pensCount: null, pensSize: "",
+      guard: null,
+    };
+
+    /* Размер загона человек пишет словами: «15 на 12», «15х12», «180».
+       Берём все числа из строки: два — это стороны, одно — сразу площадь.
+       Лишние слова вокруг не мешают, «примерно 15 на 12 метров» читается.
+    
+       Возвращает null, когда прочитать нечего. Это не ноль: ноль означал
+       бы загон без площади, а null — что мы не поняли ответ, и тогда
+       спрашиваем заново, а не считаем комплект по половине данных */
+    function penArea(text) {
+      const found = String(text || "").replace(/,/g, ".").match(/\d+(?:\.\d+)?/g);
+      if (!found) return null;
+      const a = parseFloat(found[0]);
+      if (!(a > 0)) return null;
+      if (found.length < 2) return a;
+      const b = parseFloat(found[1]);
+      return b > 0 ? a * b : a;
+    }
+
+    function kit(s) {
+      const head = Math.max(0, s.head || 0);
+      /* Откорм не может быть больше стада: иначе обычных голов выйдет
+         отрицательное число и проходов получится меньше, чем на самом деле */
+      const feed = s.feedlot ? Math.min(Math.max(0, s.feedHead || 0), head) : 0;
+      const plain = head - feed;
+      const races = Math.max(1,
+        Math.ceil(plain / HEAD_PER_RACE) + Math.ceil(feed / FEED_PER_RACE));
+      const race = races * CAMS_PER_RACE;
+
+      /* Обзор загонов. Считается, только когда сказали «да» и мы поняли
+         размер: иначе введённое и потом отменённое число продолжало бы
+         влиять на комплект */
+      /* Ответ «нет» гасится здесь, и только здесь. Раньше та же проверка
+         стояла ещё и строкой ниже, и обе были бесполезны: снятие любой из
+         них ничего не меняло, потому что вторая подхватывала. Мутация это
+         и показала — правило, продублированное дважды, не проверяется
+         ни разу */
+      const one = s.pens ? penArea(s.pensSize) : null;
+      const pens = (one && s.pensCount > 0)
+        ? Math.ceil(one * s.pensCount / M2_PER_PEN_CAM)
+        : 0;
+
+      /* Охрана по периметру. Площадь в гектарах, забор считаем как квадрат
+         равной площади: сторона это корень, сторон четыре */
+      const side = s.guard && s.area > 0 ? Math.sqrt(s.area * 10000) : 0;
+      const guard = side
+        ? Math.max(MIN_GUARD_CAMS, Math.ceil(4 * side / M_PER_GUARD_CAM))
+        : 0;
+
+      const cams = race + pens + guard;
+      return {
+        races: races, race: race, pens: pens, guard: guard,
+        cams: cams, pcs: Math.ceil(cams / CAMS_PER_PC),
+      };
+    }
+
+    /* Какое замечание показать. Пока поголовья нет, показывать нечего —
+       человек ещё ничего не сказал, и подсказка про размер стада была бы
+       выдумкой */
+    function noteKey(s) {
+      if (!s.head) return "noteStart";
+      if (s.head >= BIG_HERD) return "noteBig";
+      if (s.head < SMALL_FARM) return "noteSmall";
+      return "noteOk";
+    }
+
+    /* Что осталось незаполненным. Порядок списка — порядок полей на
+       странице: человек идёт по нему сверху вниз и не мечется */
+    function missing(s) {
+      const gaps = [];
+      if (!s.head) gaps.push({ field: "f-head", focus: "q-head", err: "e-head", key: "eHead" });
+      if (s.feedlot === null) {
+        gaps.push({ field: "f-feedlot", focus: null, err: "e-feedlot", key: "eFeedlot" });
+      } else if (s.feedlot && !s.feedHead) {
+        gaps.push({ field: "f-feedlot", focus: "q-feedhead", err: "e-feedlot", key: "eFeedHead" });
+      }
+      if (!s.area) gaps.push({ field: "f-area", focus: "q-area", err: "e-area", key: "eArea" });
+      if (s.pens === null) {
+        gaps.push({ field: "f-pens", focus: null, err: "e-pens", key: "ePens" });
+      } else if (s.pens) {
+        if (!s.pensCount) gaps.push({ field: "f-pens", focus: "q-penscount", err: "e-pens", key: "ePensCount" });
+        else if (!s.pensSize.trim()) gaps.push({ field: "f-pens", focus: "q-penssize", err: "e-pens", key: "ePensSize" });
+        /* Непустого мало: из «большой» площадь не вычислить, а комплект без
+           загонов молча вышел бы вчетверо меньше настоящего */
+        else if (penArea(s.pensSize) === null) gaps.push({ field: "f-pens", focus: "q-penssize", err: "e-pens", key: "ePensRead" });
+      }
+      if (s.guard === null) gaps.push({ field: "f-guard", focus: null, err: "e-guard", key: "eGuard" });
+      return gaps;
+    }
+
+    /* Сообщение в WhatsApp. Собирается из ответов, чтобы человеку не
+       пришлось ничего печатать, а менеджеру — ничего переспрашивать */
+    function waMessage(s, k, dict) {
+      const yn = function (v) { return v ? dict.waYes : dict.waNo; };
+      const lines = [
+        dict.waIntro,
+        "",
+        dict.waHead + ": " + s.head,
+        dict.waFeedlot + ": " + yn(s.feedlot) +
+        (s.feedlot ? " (" + dict.waFeedHead + " " + s.feedHead + ")" : ""),
+        dict.waArea + ": " + s.area,
+        dict.waPens + ": " + yn(s.pens) +
+        (s.pens ? " (" + dict.waPensCount + " " + s.pensCount +
+          ", " + dict.waPensSize + " " + s.pensSize.trim() + ")" : ""),
+        dict.waGuard + ": " + (s.guard ? dict.waNeed : dict.waSkip),
+        "",
+        dict.waOut
+          .replace("{race}", k.races).replace("{cr}", k.race)
+          .replace("{cp}", k.pens).replace("{cg}", k.guard)
+          .replace("{cams}", k.cams).replace("{pc}", k.pcs),
+        dict.waAsk,
+      ];
+      return lines.join("\n");
+    }
+
+    let lang = "ru";
+    let statusTimer = 0;
+    let tried = false;   // нажимали ли уже «Отправить»
+
+    function show(id, on) {
+      const el = document.getElementById(id);
+      if (el) el.hidden = !on;
+    }
+
+    function render() {
+      const dict = T[lang];
+      const k = kit(state);
+      const ready = state.head > 0;
+
+      /* Пока поголовья нет, числа показывать нельзя: единица проходов при
+         пустом поле — это не ответ, а обман. Ставим прочерк */
+      document.getElementById("r-race").textContent = ready ? k.races : "—";
+      document.getElementById("r-camrace").textContent = ready ? k.race : "—";
+      document.getElementById("r-campens").textContent = ready ? k.pens : "—";
+      document.getElementById("r-camguard").textContent = ready ? k.guard : "—";
+      document.getElementById("r-cams").textContent = ready ? k.cams : "—";
+      document.getElementById("r-pc").textContent = ready ? k.pcs : "—";
+
+      const note = document.getElementById("r-note");
+      note.dataset.i18n = noteKey(state);
+      note.textContent = dict[noteKey(state)];
+
+      /* Поля, которые появляются после «да» */
+      show("s-feedlot", state.feedlot === true);
+      show("s-pens", state.pens === true);
+
+      /* Ругаемся только после первой попытки отправить. До этого человек
+         ещё ничего не сделал, а красное поле уже висит — так его теряют */
+      const gaps = missing(state);
+      document.querySelectorAll(".field").forEach(function (f) { f.classList.remove("bad"); });
+      ["e-head", "e-feedlot", "e-area", "e-pens", "e-guard"].forEach(function (id) { show(id, false); });
+      if (tried) {
+        gaps.forEach(function (g) {
+          document.getElementById(g.field).classList.add("bad");
+          /* Под полем общая фраза, а конкретный вопрос стоит в сводке
+             наверху. Дублировать название вопроса прямо под его же
+             подписью незачем: человек и так видит, о чём поле */
+          const err = document.getElementById(g.err);
+          err.textContent = dict.eEmpty;
+          err.hidden = false;
+        });
+      }
+
+      const summary = document.getElementById("summary");
+      const list = document.getElementById("summary-list");
+      if (tried && gaps.length) {
+        list.innerHTML = "";
+        gaps.forEach(function (g) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = "#" + g.field;
+          a.textContent = dict[g.key];
+          a.addEventListener("click", function (e) {
+            e.preventDefault();
+            const target = document.getElementById(g.focus || g.field);
+            target.scrollIntoView({ block: "center" });
+            if (g.focus) target.focus();
+          });
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+        summary.hidden = false;
+      } else {
+        summary.hidden = true;
+      }
+
+      document.querySelectorAll(".js-send").forEach(function (a) {
+        a.href = gaps.length
+          ? "#ask"
+          : "https://wa.me/" + CONTACT.phone + "?text=" +
+          encodeURIComponent(waMessage(state, k, dict));
+      });
+
+      /* Итог для читалки — одной строкой и с задержкой. Объявлять каждое
+         число на каждое нажатие значит превратить анкету в непрерывную
+         болтовню, из-за которой ей нельзя пользоваться */
+      window.clearTimeout(statusTimer);
+      statusTimer = window.setTimeout(function () {
+        document.getElementById("r-status").textContent = ready
+          ? dict.rRace + ": " + k.races + ". " + dict.rCams + ": " + k.cams +
+          ". " + dict.rPc + ": " + k.pcs + "."
+          : "";
+      }, 700);
+    }
+
+    /* Пустое поле и мусор дают NaN. Это null, а не ноль: «не ответили» и
+       «ответили нулём» должны различаться */
+    function readNum(id) {
+      const el = document.getElementById(id);
+      if (!el || el.value.trim() === "") return null;
+      const raw = parseFloat(el.value.replace(",", "."));
+      if (isNaN(raw) || raw <= 0) return null;
+      const max = parseFloat(el.max);
+      return isNaN(max) ? raw : Math.min(raw, max);
+    }
+
+    function readInputs() {
+      state.head = readNum("q-head");
+      state.feedHead = readNum("q-feedhead");
+      state.area = readNum("q-area");
+      state.pensCount = readNum("q-penscount");
+      const size = document.getElementById("q-penssize");
+      state.pensSize = size ? size.value : "";
+      render();
+    }
+
+    document.querySelectorAll(".js-num, .js-text").forEach(function (input) {
+      input.addEventListener("input", readInputs);
+    });
+
+    document.querySelectorAll(".js-step").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const input = document.getElementById(btn.dataset.target);
+        const now = parseFloat(input.value.replace(",", "."));
+        const step = parseFloat(btn.dataset.delta);
+        const min = parseFloat(input.min) || 0;
+        const max = parseFloat(input.max) || 20000;
+        /* Пустое поле плюс шаг должны дать сам шаг, а не «минимум».
+           Иначе первое нажатие «+» на поле голов даёт 1, а не 50 */
+        const next = (isNaN(now) ? 0 : now) + step;
+        input.value = Math.min(Math.max(next, min), max);
+        readInputs();
+      });
+    });
+
+    /* Три группы «да/нет» устроены одинаково, поэтому и обработчик один:
+       три почти одинаковых куска кода разъезжаются при первой же правке */
+    document.querySelectorAll(".js-pick").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const key = btn.dataset.key;
+        state[key] = btn.dataset.val === "1";
+        document.querySelectorAll('.js-pick[data-key="' + key + '"]').forEach(function (other) {
+          other.setAttribute("aria-pressed", String(other === btn));
+        });
+        readInputs();
+      });
+    });
+
+    /* Кнопка не выключается, а проверяет. Выключенная кнопка не объясняет,
+       чего не хватает, — человек тычет в неё и уходит */
+    document.querySelectorAll(".js-send").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        tried = true;
+        render();
+        const gaps = missing(state);
+        if (!gaps.length) return;      // ссылка уже ведёт в WhatsApp
+        e.preventDefault();
+        const summary = document.getElementById("summary");
+        summary.scrollIntoView({ block: "center" });
+        summary.focus();
+      });
+    });
+
+    /* ------------------------------------------------------------- подстановка */
+    function fillContacts(l) {
+      const text = encodeURIComponent(T[l]._wa);
+      document.querySelectorAll(".js-wa").forEach(function (a) {
+        a.href = "https://wa.me/" + CONTACT.phone + "?text=" + text;
+      });
+      document.querySelectorAll(".js-tel").forEach(function (a) {
+        a.href = "tel:+" + CONTACT.phone;
+        a.textContent = CONTACT.phonePretty;
+      });
+      document.querySelectorAll(".js-mail").forEach(function (a) {
+        a.href = "mailto:" + CONTACT.email;
+        a.textContent = CONTACT.email;
+      });
+    }
+
+    function applyLang(next) {
+      const dict = T[next];
+      if (!dict) return;
+      lang = next;
+
+      document.documentElement.lang = dict._htmlLang;
+      document.title = dict._title;
+
+      document.querySelectorAll("[data-i18n]").forEach(function (node) {
+        const value = dict[node.dataset.i18n];
+        if (value === undefined) return;
+        /* innerHTML нужен из-за <br> в заголовке. Значения берутся только из
+           словаря выше — пользовательский текст сюда не попадает */
+        node.innerHTML = value;
+      });
+
+      document.querySelectorAll(".langs button").forEach(function (btn) {
+        btn.setAttribute("aria-pressed", String(btn.dataset.lang === next));
+      });
+
+      fillContacts(next);
+      render();
+      try { localStorage.setItem("qozhal-lang", next); } catch (e) { /* приватный режим */ }
+    }
+
+    function initialLang() {
+      let saved = null;
+      try { saved = localStorage.getItem("qozhal-lang"); } catch (e) { /* ignore */ }
+      if (saved && T[saved]) return saved;
+      const nav = (navigator.language || "ru").slice(0, 2).toLowerCase();
+      return T[nav] ? nav : "ru";
+    }
+
+    document.querySelectorAll(".langs button").forEach(function (btn) {
+      btn.addEventListener("click", function () { applyLang(btn.dataset.lang); });
+    });
+
+    applyLang(initialLang());
+    document.getElementById("year").textContent = String(new Date().getFullYear());
+
+    /* ----------------------------------------------------------------- заставка */
+    /* Держим синий экран, пока браузер не подготовит шрифт: иначе страница
+       на долю секунды рисуется системным Arial и потом перерисовывается.
+    
+       Три правила, без которых заставка превращается в ловушку:
+       1. ПОТОЛОК ПО ВРЕМЕНИ — через BOOT_MAX_MS откроется в любом случае.
+       2. ОШИБКА СЧИТАЕТСЯ ГОТОВНОСТЬЮ — шрифт, который не скачался, это
+          ответ «дальше ждать нечего».
+       3. БЕЗ JS ЗАСТАВКИ НЕТ — класс ставится скриптом в <head>. */
+    const BOOT_MAX_MS = 2000;
+
+    /* Старые браузеры matchMedia не знают; без проверки страница падала бы
+       на первой же строке и осталась бы под заставкой навсегда */
+    function prefersStill() {
+      if (typeof window.matchMedia !== "function") return false;
+      try {
+        return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    (function boot() {
+      const root = document.documentElement;
+      if (!root.classList.contains("booting")) return;
+      const bar = document.querySelector(".boot-bar i");
+      let over = false;
+
+      function finish() {
+        if (over) return;
+        over = true;
+        if (bar) bar.style.width = "100%";
+        root.classList.add("boot-out");
+        window.setTimeout(function () {
+          root.classList.remove("booting", "boot-out");
+        }, 400);
+      }
+
+      if (bar) bar.style.width = "35%";
+
+      /* document.fonts есть не везде. Нет — открываем сразу: показать
+         страницу системным шрифтом лучше, чем не показать вовсе */
+      if (document.fonts && typeof document.fonts.ready === "object") {
+        document.fonts.ready.then(finish, finish);
+      } else {
+        finish();
+      }
+      window.setTimeout(finish, BOOT_MAX_MS);
+    })();
+
+    /* ---------------------------------------------------------------- появление */
+    const targets = document.querySelectorAll(".rise");
+    if (!prefersStill() && "IntersectionObserver" in window) {
+      targets.forEach(function (el) { el.classList.add("rise-armed"); });
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("rise-in");
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -10% 0px" });
+      targets.forEach(function (el) { io.observe(el); });
+    }
+  </script>
+</body>
+
+</html>
